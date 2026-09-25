@@ -1,0 +1,1706 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Diaporama Vidéo — Souvenirs en mouvement</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    :root {
+        --bg: #0f0f14; --panel: #1a1a22; --panel-2: #22222c; --border: #2e2e3a;
+        --ink: #f0eef5; --ink-dim: #8a8698; --ink-faint: #54505e;
+        --accent: #a78bfa; --accent-2: #f472b6; --accent-3: #38bdf8;
+        --success: #34d399; --error: #f87171; --warn: #fbbf24; --info: #60a5fa;
+        --radius: 12px;
+    }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        background: var(--bg); color: var(--ink); min-height: 100vh;
+        padding: 1.5rem 1rem 6rem; font-size: 15px; line-height: 1.5;
+        max-width: 900px; margin: 0 auto;
+        background-image:
+            radial-gradient(circle at 15% 0%, rgba(167,139,250,0.15) 0%, transparent 50%),
+            radial-gradient(circle at 85% 100%, rgba(244,114,182,0.10) 0%, transparent 50%);
+    }
+    header { margin-bottom: 1.5rem; text-align: center; }
+    h1 {
+        font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em;
+        margin-bottom: 0.3rem;
+        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 50%, var(--accent-3) 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .subtitle { font-size: 0.8rem; color: var(--ink-dim); font-style: italic; }
+
+```
+.toast {
+    position: fixed; top: 1.5rem; left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: var(--accent); color: #fff;
+    padding: 0.85rem 1.4rem; border-radius: 10px;
+    font-size: 0.85rem; font-weight: 600;
+    box-shadow: 0 4px 24px rgba(167,139,250,0.4);
+    z-index: 1000; opacity: 0;
+    transition: transform 0.35s ease, opacity 0.35s ease;
+    max-width: 90vw; text-align: center;
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.toast.visible { transform: translateX(-50%) translateY(0); opacity: 1; }
+.toast.success { background: var(--success); box-shadow: 0 4px 24px rgba(52,211,153,0.4); }
+.toast.error { background: var(--error); box-shadow: 0 4px 24px rgba(248,113,113,0.4); }
+.toast.warn { background: var(--warn); color: #1a1a1a; box-shadow: 0 4px 24px rgba(251,191,36,0.4); }
+.toast .toast-icon { font-size: 1rem; }
+
+.info-banner {
+    background: linear-gradient(135deg, rgba(167,139,250,0.14), rgba(56,189,248,0.08));
+    border-left: 3px solid var(--accent);
+    padding: 0.85rem 1rem; border-radius: 8px;
+    font-size: 0.78rem; color: var(--ink);
+    margin-bottom: 1rem; line-height: 1.5;
+}
+.info-banner strong { color: var(--accent); }
+
+.section {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); margin-bottom: 1rem;
+    overflow: hidden;
+}
+.section-header {
+    padding: 0.9rem 1.1rem; cursor: pointer; user-select: none;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.section-header:active { background: var(--panel-2); }
+.section-title {
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--ink-dim); font-weight: 700;
+}
+.section-title .badge {
+    display: inline-block; margin-left: 0.4rem; padding: 0.1rem 0.45rem;
+    background: var(--accent); color: #fff; border-radius: 10px;
+    font-size: 0.65rem; letter-spacing: 0;
+}
+.section-title .badge.soft { background: var(--info); }
+.section-title .badge.hot { background: var(--accent-2); color: #fff; }
+.section-header .chevron {
+    font-size: 0.7rem; color: var(--ink-faint); transition: transform 0.2s;
+}
+.section.open .section-header .chevron { transform: rotate(180deg); }
+.section-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+.section.open .section-body { max-height: 6000px; }
+.section-content { padding: 0 1.1rem 1.1rem; }
+
+.api-panel {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1rem 1.2rem;
+    margin-bottom: 1rem; transition: border-color 0.3s;
+}
+.api-panel.ok { border-color: var(--accent); box-shadow: 0 0 20px rgba(167,139,250,0.2); }
+
+.api-key-input {
+    width: 100%; padding: 0.85rem 1rem;
+    border-radius: 8px; border: 1px solid var(--border);
+    background: #0a0a0f; color: var(--ink);
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 0.85rem; margin-bottom: 0.6rem;
+}
+.api-key-input:focus { outline: none; border-color: var(--accent); }
+
+.api-save-btn {
+    width: 100%; padding: 0.8rem 1.2rem;
+    border-radius: 8px; border: none;
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    color: #fff;
+    font-size: 0.9rem; font-weight: 700; font-family: inherit;
+    cursor: pointer; transition: opacity 0.2s, transform 0.1s;
+    margin-bottom: 0.6rem;
+}
+.api-save-btn:active { transform: scale(0.98); }
+
+.api-status-line {
+    font-size: 0.75rem; padding: 0.55rem 0.85rem;
+    border-radius: 6px; margin-bottom: 0.5rem;
+    display: flex; align-items: center; gap: 0.5rem;
+    background: var(--panel-2); color: var(--ink-dim);
+    transition: all 0.3s;
+}
+.api-status-line.ok {
+    background: rgba(52,211,153,0.15); color: var(--success); font-weight: 600;
+}
+.api-status-line .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--ink-faint); flex-shrink: 0;
+    transition: background 0.3s;
+}
+.api-status-line.ok .status-dot { background: var(--success); }
+
+.api-hint { font-size: 0.72rem; color: var(--ink-dim); margin-top: 0.4rem; }
+.api-hint a { color: var(--accent-3); text-decoration: underline; }
+.stat-line {
+    font-size: 0.72rem; color: var(--ink-dim); margin-top: 0.5rem;
+    padding: 0.4rem 0.6rem; background: var(--panel-2); border-radius: 6px;
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.3rem;
+}
+
+.wake-status {
+    font-size: 0.72rem; padding: 0.5rem 0.7rem;
+    border-radius: 6px; margin-top: 0.4rem;
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(96,165,250,0.12); color: var(--info);
+    flex-wrap: wrap; gap: 0.4rem;
+}
+.wake-status.active { background: rgba(52,211,153,0.15); color: var(--success); }
+.wake-status.warn { background: rgba(251,191,36,0.15); color: var(--warn); }
+.wake-status button {
+    background: transparent; border: 1px solid currentColor;
+    color: inherit; padding: 0.25rem 0.6rem; border-radius: 6px;
+    font-size: 0.68rem; cursor: pointer; font-family: inherit;
+}
+.wake-status button:active { opacity: 0.6; }
+
+.upload-zone {
+    border: 2px dashed var(--border); border-radius: var(--radius);
+    padding: 2rem 1rem; text-align: center; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s; margin-bottom: 1rem;
+    background: var(--panel);
+}
+.upload-zone:active { border-color: var(--accent); background: var(--panel-2); }
+.upload-zone.loading { pointer-events: none; opacity: 0.6; }
+.upload-zone input[type="file"] { display: none; }
+.upload-icon { font-size: 2.2rem; margin-bottom: 0.6rem; opacity: 0.9; color: var(--accent); }
+.upload-text { font-size: 0.95rem; color: var(--ink); margin-bottom: 0.2rem; font-weight: 600; }
+.upload-hint { font-size: 0.75rem; color: var(--ink-dim); }
+
+.images-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 0.5rem; margin-bottom: 1rem;
+}
+.image-card {
+    position: relative; border-radius: 8px; overflow: hidden;
+    border: 1px solid var(--border); background: #000;
+    aspect-ratio: 9/16;
+}
+.image-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.image-card .remove-btn {
+    position: absolute; top: 4px; right: 4px;
+    background: rgba(0,0,0,0.75); color: #fff; border: none;
+    width: 22px; height: 22px; border-radius: 50%; font-size: 11px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+}
+.image-card .order-badge {
+    position: absolute; bottom: 4px; left: 4px;
+    background: rgba(167,139,250,0.9); color: #fff;
+    padding: 0.15rem 0.45rem; border-radius: 10px;
+    font-size: 0.65rem; font-weight: 700;
+}
+
+.order-controls {
+    display: flex; gap: 0.4rem; margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+.order-btn {
+    padding: 0.5rem 0.9rem; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--panel-2);
+    color: var(--ink); font-size: 0.78rem; font-family: inherit;
+    cursor: pointer; font-weight: 600;
+}
+.order-btn:active { transform: scale(0.97); }
+.order-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+textarea {
+    width: 100%; padding: 0.75rem 0.9rem; border-radius: 8px;
+    border: 1px solid var(--border); background: #0a0a0f;
+    color: var(--ink); font-family: inherit; font-size: 0.88rem;
+    min-height: 80px; resize: vertical;
+}
+textarea:focus { outline: none; border-color: var(--accent); }
+
+.prompt-main {
+    width: 100%; padding: 0.85rem 1rem;
+    border-radius: 8px; border: 1px solid var(--border);
+    background: #0a0a0f; color: var(--ink);
+    font-family: inherit; font-size: 0.9rem;
+    min-height: 110px; resize: vertical; line-height: 1.5;
+}
+.prompt-main:focus { outline: none; border-color: var(--accent); }
+.prompt-main-hint {
+    font-size: 0.72rem; color: var(--ink-dim);
+    margin-top: 0.5rem; line-height: 1.4;
+}
+
+.prompt-presets {
+    display: flex; flex-wrap: wrap; gap: 0.4rem;
+    margin-top: 0.7rem;
+}
+.prompt-preset {
+    padding: 0.35rem 0.75rem; border-radius: 16px;
+    border: 1px solid var(--border); background: var(--panel-2);
+    font-size: 0.72rem; cursor: pointer; color: var(--ink);
+    transition: all 0.15s; user-select: none; font-weight: 600;
+}
+.prompt-preset:active { transform: scale(0.96); }
+.prompt-preset:hover { border-color: var(--accent); color: var(--accent); }
+
+.styles-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    gap: 0.5rem;
+}
+.style-card {
+    padding: 0.75rem 0.85rem; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--panel-2);
+    cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.style-card:active { transform: scale(0.98); }
+.style-card.selected {
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    color: #fff; border-color: var(--accent);
+    box-shadow: 0 0 20px rgba(167,139,250,0.4);
+}
+.style-card .style-emoji { font-size: 1.2rem; flex-shrink: 0; }
+.style-card .style-name { font-size: 0.8rem; font-weight: 700; line-height: 1.2; }
+.style-card .style-desc { font-size: 0.65rem; opacity: 0.7; margin-top: 0.1rem; line-height: 1.2; }
+.style-card.selected .style-desc { opacity: 0.9; }
+
+.style-category-header {
+    grid-column: 1 / -1;
+    font-size: 0.72rem; font-weight: 800;
+    color: var(--accent-3); text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 0.7rem 0 0.3rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.3rem;
+}
+.style-category-header:first-child { padding-top: 0; border-bottom: none; }
+.style-category-desc {
+    grid-column: 1 / -1;
+    font-size: 0.68rem; color: var(--ink-dim);
+    font-style: italic; margin-bottom: 0.4rem; line-height: 1.35;
+}
+
+.no-style-card {
+    grid-column: 1 / -1;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    border: 2px dashed var(--border);
+    background: transparent;
+    text-align: center; cursor: pointer;
+    transition: all 0.15s;
+    font-size: 0.82rem; color: var(--ink-dim);
+}
+.no-style-card:active { transform: scale(0.99); }
+.no-style-card.selected {
+    border-color: var(--accent); border-style: solid;
+    background: var(--panel-2); color: var(--accent); font-weight: 700;
+}
+
+.control-row { margin-bottom: 0.9rem; }
+.control-row:last-child { margin-bottom: 0; }
+.control-label {
+    display: block; font-size: 0.72rem; color: var(--ink-dim);
+    margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.08em;
+    font-weight: 700;
+}
+select {
+    width: 100%; padding: 0.7rem 0.9rem; border-radius: 8px;
+    border: 1px solid var(--border); background: #0a0a0f;
+    color: var(--ink); font-family: inherit; font-size: 0.88rem;
+    -webkit-appearance: none; appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%23a78bfa' d='M0 0l5 6 5-6z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 0.9rem center;
+    background-size: 10px;
+}
+select:focus { outline: none; border-color: var(--accent); }
+
+.btn-primary {
+    width: 100%; padding: 1.1rem; border-radius: var(--radius);
+    border: none;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+    color: #fff;
+    font-size: 1rem; font-weight: 800; font-family: inherit;
+    cursor: pointer; transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
+    margin-bottom: 1rem;
+    letter-spacing: 0.05em;
+    box-shadow: 0 4px 24px rgba(167,139,250,0.35);
+}
+.btn-primary:active:not(:disabled) { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.25; cursor: not-allowed; box-shadow: none; }
+
+.btn-stop {
+    width: 100%; padding: 0.8rem; border-radius: var(--radius);
+    border: 1px solid var(--error); background: transparent;
+    color: var(--error); font-size: 0.85rem; font-weight: 700;
+    font-family: inherit; cursor: pointer; margin-bottom: 1rem;
+    display: none;
+}
+.btn-stop.visible { display: block; }
+
+.queue { margin-top: 1rem; }
+.queue-summary {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.7rem 0.9rem; margin-bottom: 0.6rem;
+    font-size: 0.78rem; display: flex; justify-content: space-between;
+    align-items: center; flex-wrap: wrap; gap: 0.4rem;
+}
+.queue-summary .progress-text { color: var(--accent); font-weight: 700; }
+.queue-summary .eta-text { color: var(--ink-dim); }
+
+.queue-item {
+    display: flex; align-items: center; gap: 0.8rem;
+    padding: 0.7rem 0.8rem; border-radius: 8px;
+    border: 1px solid var(--border); margin-bottom: 0.4rem;
+    background: var(--panel); transition: border-color 0.3s, opacity 0.3s;
+    font-size: 0.82rem;
+}
+.queue-item.pending { opacity: 0.5; }
+.queue-item.creating { border-color: var(--warn); }
+.queue-item.processing { border-color: var(--accent); }
+.queue-item.done { border-color: var(--success); }
+.queue-item.failed { border-color: var(--error); }
+.queue-item .q-icon { font-size: 1rem; width: 1.5rem; text-align: center; flex-shrink: 0; color: var(--accent); }
+.queue-item .q-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.queue-item .q-status { font-size: 0.72rem; color: var(--ink-dim); text-align: right; flex-shrink: 0; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.queue-more {
+    text-align: center; padding: 0.5rem; color: var(--ink-dim);
+    font-size: 0.75rem; font-style: italic;
+}
+
+.gallery { margin-top: 1.5rem; }
+.gallery-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.8rem;
+}
+.gallery-item {
+    border-radius: var(--radius); overflow: hidden;
+    border: 1px solid var(--accent); background: #000;
+    animation: fadeIn 0.4s ease;
+    box-shadow: 0 4px 20px rgba(167,139,250,0.25);
+}
+.gallery-item video { width: 100%; display: block; aspect-ratio: 9/16; object-fit: cover; }
+.gallery-item .g-caption {
+    padding: 0.4rem 0.6rem; background: var(--panel);
+    font-size: 0.7rem; color: var(--accent);
+    font-weight: 700; letter-spacing: 0.05em;
+    display: flex; align-items: center; justify-content: space-between; gap: 0.4rem;
+}
+.gallery-item .g-download {
+    background: transparent; border: 1px solid var(--accent);
+    color: var(--accent); border-radius: 6px;
+    font-size: 0.68rem; font-weight: 700; font-family: inherit;
+    padding: 0.2rem 0.5rem; cursor: pointer; flex-shrink: 0;
+    transition: background 0.15s, color 0.15s;
+}
+.gallery-item .g-download:active { transform: scale(0.96); }
+.gallery-item .g-download.working { opacity: 0.6; pointer-events: none; }
+
+.status-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(135deg, #1a1a22, #0f0f14);
+    color: var(--ink); padding: 0.7rem 1rem;
+    font-size: 0.78rem; display: flex; align-items: center; gap: 0.6rem;
+    transform: translateY(100%); transition: transform 0.3s;
+    z-index: 100;
+    border-top: 1px solid var(--accent);
+}
+.status-bar.visible { transform: translateY(0); }
+.status-bar .spinner {
+    width: 12px; height: 12px; border: 2px solid rgba(167,139,250,0.3);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.8s linear infinite; flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.hidden { display: none !important; }
+
+#noSleepCanvas { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0.01; pointer-events: none; z-index: -1; }
+#noSleepVideo { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0.01; pointer-events: none; z-index: -1; }
+```
+
+</style>
+</head>
+<body>
+
+<header>
+    <h1>🎞️ Diaporama Vidéo</h1>
+    <p class="subtitle">Vos souvenirs enchaînés en un seul film</p>
+</header>
+
+<div class="info-banner">
+    <strong>Concept :</strong> Ajoute plusieurs photos dans l'ordre de ton choix. L'IA anime <strong>chaque image</strong> (mouvement subtil, lumière, ambiance) puis les <strong>enchaîne</strong> avec des transitions fluides (fade, morphing, match cut, zoom) pour former <strong>une seule vidéo continue</strong>. Parfait pour souvenirs, voyages, mariages, portfolios. Format <strong>portrait 9:16</strong>.
+</div>
+
+<div class="api-panel" id="api-panel">
+    <input type="password" class="api-key-input" id="api-key-input"
+           placeholder="Collez votre clé API ici (sk-...)" autocomplete="off" spellcheck="false">
+    <button type="button" class="api-save-btn" id="api-save-btn">Enregistrer la clé</button>
+    <div class="api-status-line" id="api-status-line">
+        <span class="status-dot"></span>
+        <span id="api-status-text">Aucune clé API enregistrée</span>
+    </div>
+    <div class="api-hint">
+        Clé gratuite sur <a href="https://platform.agnes-ai.com" target="_blank">platform.agnes-ai.com</a> → Settings → API Keys
+    </div>
+    <div class="stat-line" id="stat-line">
+        <span>📊 Vitesse moyenne : <span id="stat-speed">en attente de données</span></span>
+        <span id="stat-samples">0 génération</span>
+    </div>
+    <div class="wake-status" id="wake-status">
+        <span id="wake-status-text">💤 Veille automatique</span>
+        <button type="button" id="wake-toggle-btn">Garder l'écran allumé</button>
+    </div>
+</div>
+
+<div class="upload-zone" id="upload-zone">
+    <input type="file" id="file-input" accept="image/*" multiple>
+    <div class="upload-icon">🖼️</div>
+    <div class="upload-text">Ajoutez vos images</div>
+    <div class="upload-hint">Elles seront enchaînées dans l'ordre d'ajout</div>
+</div>
+
+<div class="images-grid" id="images-grid"></div>
+
+<div class="order-controls" id="order-controls" style="display:none;">
+    <button type="button" class="order-btn" id="shuffle-btn">🔀 Mélanger</button>
+    <button type="button" class="order-btn" id="reverse-btn">↩️ Inverser</button>
+    <button type="button" class="order-btn" id="sort-name-btn">🔤 Trier par nom</button>
+</div>
+
+<div class="section open" id="section-prompt">
+    <div class="section-header" data-toggle="section-prompt">
+        <span class="section-title">✍️ Votre vision <span class="badge soft">recommandé</span></span>
+        <span class="chevron">▼</span>
+    </div>
+    <div class="section-body">
+        <div class="section-content">
+            <textarea class="prompt-main" id="main-prompt"
+                placeholder="Décrivez le diaporama que vous voulez. Par exemple :
+
+« Chaque image s’anime doucement comme un souvenir qui revient. Mouvements subtils, lumière chaude, ambiance nostalgique. Les transitions entre les scènes sont fluides comme un fondu au noir. Gardez chaque sujet exactement identique à la photo originale. »”></textarea>
+<div class="prompt-presets" id="prompt-presets"></div>
+<div class="prompt-main-hint">
+💡 Ce prompt s’applique à <strong>toutes</strong> les images. Le thème choisi ci-dessous définit les transitions, l’ambiance et le rythme du diaporama.
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="section open" id="section-style">
+    <div class="section-header" data-toggle="section-style">
+        <span class="section-title">🎨 Thème du diaporama <span class="badge hot">essentiel</span></span>
+        <span class="chevron">▼</span>
+    </div>
+    <div class="section-body">
+        <div class="section-content">
+            <div class="styles-grid" id="styles-grid"></div>
+        </div>
+    </div>
+</div>
+
+<div class="section" id="section-tech">
+    <div class="section-header" data-toggle="section-tech">
+        <span class="section-title">📷 Réglages techniques</span>
+        <span class="chevron">▼</span>
+    </div>
+    <div class="section-body">
+        <div class="section-content">
+            <div class="control-row">
+                <label class="control-label">Durée de chaque scène</label>
+                <select id="duration-select">
+                    <option value="121">5 secondes</option>
+                    <option value="153" selected>6,4 secondes (recommandé)</option>
+                    <option value="241">10 secondes</option>
+                </select>
+            </div>
+            <div class="control-row">
+                <label class="control-label">Cadrage</label>
+                <select id="framing-select">
+                    <option value="random">Aléatoire</option>
+                    <option value="close">Très serré (détail)</option>
+                    <option value="medium">Moyen (buste)</option>
+                    <option value="wide">Large (plan large)</option>
+                </select>
+            </div>
+            <div class="control-row">
+                <label class="control-label">Rythme</label>
+                <select id="intensity-select">
+                    <option value="random">Aléatoire</option>
+                    <option value="slow">Lent et contemplatif</option>
+                    <option value="moderate">Modéré et fluide</option>
+                    <option value="dynamic">Dynamique et rythmé</option>
+                </select>
+            </div>
+            <div class="control-row">
+                <label class="control-label">Transitions entre les scènes</label>
+                <select id="transition-select">
+                    <option value="fade" selected>Fondu (fade)</option>
+                    <option value="morph">Morphing fluide</option>
+                    <option value="match">Match cut (raccord)</option>
+                    <option value="zoom">Zoom cut</option>
+                    <option value="flash">Flash blanc</option>
+                    <option value="glitch">Glitch numérique</option>
+                    <option value="cross">Cross dissolve</option>
+                    <option value="whip">Whip pan</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<button type="button" class="btn-primary" id="generate-btn" disabled>
+    Créer le diaporama
+</button>
+
+<button type="button" class="btn-stop" id="stop-btn">
+    ⏹ Arrêter la génération
+</button>
+
+<div class="queue" id="queue" style="display:none;"></div>
+
+<div class="gallery" id="gallery" style="display:none;">
+    <div class="section-title" style="margin-bottom:0.8rem;">🎬 Vidéos générées</div>
+    <div class="gallery-grid" id="gallery-grid"></div>
+</div>
+
+<div class="status-bar" id="status-bar">
+    <div class="spinner"></div>
+    <span id="status-text">Préparation…</span>
+</div>
+
+<div class="toast" id="toast">
+    <span class="toast-icon" id="toast-icon">✓</span>
+    <span id="toast-text">Message</span>
+</div>
+
+<canvas id="noSleepCanvas" width="2" height="2"></canvas>
+<video id="noSleepVideo" playsinline muted loop></video>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// CONFIGURATION API
+// ══════════════════════════════════════════════════════════════════
+const API_BASE = 'https://apihub.agnes-ai.com/v1';
+const POLL_BASE = 'https://apihub.agnes-ai.com/agnesapi';
+const MODEL_VIDEO = 'agnes-video-v2.0';
+const FRAME_RATE = 24;
+
+let createIntervalMs = 62000;
+const CREATE_INTERVAL_MIN = 62000;
+const CREATE_INTERVAL_MAX = 90000;
+const CREATE_INTERVAL_SAFE = 75000;
+
+const POLL_INTERVAL_SEC = 8;
+const MAX_POLL_ATTEMPTS = 100;
+
+const TIMING_CACHE_KEY = 'diaporama_timing_v1';
+const API_KEY_STORAGE = 'agnes_api_key';
+const WAKE_LOCK_PREF = 'diaporama_wakelock';
+
+const MAX_VISIBLE_QUEUE = 30;
+const MAX_IMAGE_SIZE = 12 * 1024 * 1024;
+const THUMBNAIL_MAX_WIDTH = 200;
+
+// ══════════════════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════════════════
+let toastTimeout = null;
+function showToast(message, type = 'success', duration = 2500) {
+    const toast = document.getElementById('toast');
+    const icon = document.getElementById('toast-icon');
+    const text = document.getElementById('toast-text');
+    if (!toast || !icon || !text) return;
+    toast.classList.remove('visible', 'success', 'error', 'warn');
+    void toast.offsetWidth;
+    const icons = { success: '✓', error: '✕', warn: '⚠' };
+    icon.textContent = icons[type] || '✓';
+    text.textContent = message;
+    toast.classList.add(type);
+    requestAnimationFrame(() => toast.classList.add('visible'));
+    if (toastTimeout) clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => toast.classList.remove('visible'), duration);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ANTI-VEILLE
+// ══════════════════════════════════════════════════════════════════
+let wakeLockSentinel = null;
+let wakeLockEnabled = false;
+let canvasStream = null;
+let canvasInterval = null;
+
+function isWakeLockSupported() {
+    return 'wakeLock' in navigator && typeof navigator.wakeLock.request === 'function';
+}
+
+async function requestWakeLockAPI() {
+    if (!isWakeLockSupported()) return false;
+    try {
+        wakeLockSentinel = await navigator.wakeLock.request('screen');
+        wakeLockSentinel.addEventListener('release', () => {
+            wakeLockSentinel = null;
+            updateWakeStatus();
+        });
+        return true;
+    } catch (e) { return false; }
+}
+
+async function releaseWakeLockAPI() {
+    if (wakeLockSentinel) {
+        try { await wakeLockSentinel.release(); } catch (e) {}
+        wakeLockSentinel = null;
+    }
+}
+
+function startCanvasStream() {
+    if (canvasStream) return true;
+    try {
+        const canvas = document.getElementById('noSleepCanvas');
+        const video = document.getElementById('noSleepVideo');
+        if (!canvas || !video) return false;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return false;
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (typeof canvas.captureStream !== 'function') return false;
+        canvasStream = canvas.captureStream(1);
+        let toggle = false;
+        canvasInterval = setInterval(() => {
+            toggle = !toggle;
+            ctx.fillStyle = toggle ? '#000000' : '#010101';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }, 1000);
+        video.srcObject = canvasStream;
+        video.muted = true;
+        video.playsInline = true;
+        const playPromise = video.play();
+        if (playPromise && playPromise.catch) playPromise.catch(e => {});
+        return true;
+    } catch (e) { return false; }
+}
+
+function stopCanvasStream() {
+    if (canvasInterval) { clearInterval(canvasInterval); canvasInterval = null; }
+    const video = document.getElementById('noSleepVideo');
+    if (video) { try { video.pause(); video.srcObject = null; } catch (e) {} }
+    if (canvasStream) {
+        try { canvasStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+        canvasStream = null;
+    }
+}
+
+async function activateWakeLock() {
+    let success = false;
+    if (isWakeLockSupported()) success = await requestWakeLockAPI();
+    if (!success) success = startCanvasStream();
+    if (!success && !canvasStream) success = startCanvasStream();
+    return success;
+}
+
+async function deactivateWakeLock() {
+    await releaseWakeLockAPI();
+    stopCanvasStream();
+}
+
+function updateWakeStatus() {
+    const el = document.getElementById('wake-status');
+    const txt = document.getElementById('wake-status-text');
+    const btn = document.getElementById('wake-toggle-btn');
+    if (!el || !txt || !btn) return;
+    el.classList.remove('active', 'warn');
+    const hasAnyMechanism = isWakeLockSupported() || (document.getElementById('noSleepCanvas')?.captureStream);
+    if (!hasAnyMechanism) {
+        el.classList.add('warn');
+        txt.textContent = '⚠️ Non supporté par ce navigateur';
+        btn.style.display = 'none';
+        return;
+    }
+    btn.style.display = 'inline-block';
+    const isActive = wakeLockSentinel !== null || canvasStream !== null;
+    if (wakeLockEnabled && isActive) {
+        el.classList.add('active');
+        txt.textContent = '✅ L\'écran reste allumé';
+        btn.textContent = 'Désactiver';
+    } else if (wakeLockEnabled && !isActive) {
+        el.classList.add('warn');
+        txt.textContent = '⏳ En attente (touchez la page)';
+        btn.textContent = 'Désactiver';
+    } else {
+        txt.textContent = '💤 Veille automatique';
+        btn.textContent = 'Garder l\'écran allumé';
+    }
+}
+
+async function toggleWakeLock() {
+    if (wakeLockEnabled) {
+        wakeLockEnabled = false;
+        await deactivateWakeLock();
+        try { localStorage.setItem(WAKE_LOCK_PREF, '0'); } catch (e) {}
+        showToast('Veille automatique réactivée', 'warn');
+    } else {
+        wakeLockEnabled = true;
+        const ok = await activateWakeLock();
+        try { localStorage.setItem(WAKE_LOCK_PREF, '1'); } catch (e) {}
+        if (ok) showToast('L\'écran va rester allumé', 'success');
+        else showToast('Activez manuellement dans les réglages', 'warn');
+    }
+    updateWakeStatus();
+}
+
+document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState === 'visible' && wakeLockEnabled) {
+        await activateWakeLock();
+        updateWakeStatus();
+    }
+});
+
+async function ensureWakeLockActive() {
+    if (!wakeLockEnabled) return;
+    if (wakeLockSentinel === null && canvasStream === null) {
+        await activateWakeLock();
+        updateWakeStatus();
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// CACHE DES TEMPS
+// ══════════════════════════════════════════════════════════════════
+function loadTimingCache() {
+    try { return JSON.parse(localStorage.getItem(TIMING_CACHE_KEY) || '{}'); }
+    catch (e) { return {}; }
+}
+function saveTimingCache(cache) {
+    try { localStorage.setItem(TIMING_CACHE_KEY, JSON.stringify(cache)); } catch (e) {}
+}
+function recordGenerationTime(numFrames, durationMs) {
+    const cache = loadTimingCache();
+    const key = String(numFrames);
+    if (!cache[key]) cache[key] = [];
+    cache[key].push(durationMs);
+    if (cache[key].length > 10) cache[key] = cache[key].slice(-10);
+    saveTimingCache(cache);
+    updateTimingDisplay();
+}
+function estimateGenerationTime(numFrames) {
+    const cache = loadTimingCache();
+    const samples = cache[String(numFrames)];
+    if (samples && samples.length > 0) {
+        const sorted = [...samples].sort((a, b) => a - b);
+        const mid = Math.floor(sorted.length / 2);
+        return sorted.length % 2 === 0 ? (sorted[mid-1] + sorted[mid]) / 2 : sorted[mid];
+    }
+    return 30000 + numFrames * 500;
+}
+function updateTimingDisplay() {
+    const cache = loadTimingCache();
+    const all = Object.values(cache).flat();
+    const speedEl = document.getElementById('stat-speed');
+    const samplesEl = document.getElementById('stat-samples');
+    if (!speedEl || !samplesEl) return;
+    if (all.length === 0) {
+        speedEl.textContent = 'en attente de données';
+        samplesEl.textContent = '0 génération';
+        return;
+    }
+    const avg = all.reduce((a, b) => a + b, 0) / all.length;
+    speedEl.textContent = (avg / 1000).toFixed(1) + ' s en moyenne';
+    samplesEl.textContent = all.length + ' génération' + (all.length > 1 ? 's' : '');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// PRESETS DE PROMPT (DIAPORAMA)
+// ══════════════════════════════════════════════════════════════════
+const PROMPT_PRESETS = [
+    { label: '💭 Souvenirs nostalgiques',
+      text: 'Chaque image s\'anime doucement comme un souvenir qui revient. Mouvements subtils, lumière chaude, ambiance nostalgique. Les transitions entre les scènes sont fluides comme un fondu au noir. Gardez chaque sujet exactement identique à la photo originale.' },
+    { label: '✈️ Voyage / Carnet de route',
+      text: 'Chaque scène est un moment de voyage qui prend vie. Mouvements de caméra lents et contemplatifs, lumière naturelle, ambiance d\'évasion. Les paysages respirent, les visages sourient. Transitions douces comme un carnet de voyage feuilleté.' },
+    { label: '💍 Mariage / Événement',
+      text: 'Chaque image s\'anime avec élégance et émotion. Mouvements doux, lumière dorée de fin de journée, ambiance romantique et chaleureuse. Les transitions entre les scènes sont fluides comme des pétales qui tombent.' },
+    { label: '📸 Portfolio Photo',
+      text: 'Chaque image s\'anime subtilement pour révéler sa beauté. Mouvements de caméra précis, lumière constante et professionnelle, ambiance soignée. Les transitions sont nettes et modernes. Gardez chaque sujet exactement identique.' },
+    { label: '🎬 Bande-annonce',
+      text: 'Chaque scène est un plan de bande-annonce. Mouvements dynamiques, lumière dramatique, rythme soutenu. Les transitions sont percutantes, comme des cuts au battement. Ambiance cinématographique épique.' },
+    { label: '🌸 Album de famille',
+      text: 'Chaque image s\'anime avec tendresse. Mouvements très lents, lumière chaude et douce, ambiance intime et joyeuse. Les transitions sont délicates comme un soupir. Gardez chaque personne exactement identique.' },
+    { label: '🎵 Clip musical',
+      text: 'Chaque scène pulse au rythme de la musique. Mouvements synchronisés, lumières colorées, ambiance énergique. Les transitions sont rythmées et percutantes. Style clip vidéo moderne.' },
+    { label: '🌙 Ambiance onirique',
+      text: 'Chaque image se dissout dans un rêve. Mouvements très lents, lumière diffuse, particules flottantes. Les transitions sont des morphings fluides et hypnotiques. Ambiance surréaliste et poétique.' }
+];
+
+// ══════════════════════════════════════════════════════════════════
+// THÈMES DE DIAPORAMA
+// ══════════════════════════════════════════════════════════════════
+const SLIDESHOW_THEMES = [
+    { id: 'nostalgia', name: 'Nostalgie', emoji: '💭', desc: 'Souvenirs, chaleur, fondu',
+      prompt: 'nostalgic memory slideshow, warm sepia and golden tones, soft fade transitions, gentle camera drift on each scene, deeply emotional and intimate atmosphere. Preserve the exact subject identity in every image.' },
+    { id: 'travel', name: 'Voyage', emoji: '✈️', desc: 'Évasion, paysages, carnet',
+      prompt: 'travel diary slideshow, wide establishing movements on each landscape, natural warm light, adventurous and free atmosphere, smooth cross dissolve between scenes, sense of journey and discovery. Preserve the exact subject identity.' },
+    { id: 'wedding', name: 'Mariage', emoji: '💍', desc: 'Élégance, romance, or',
+      prompt: 'elegant wedding slideshow, golden hour warm light, romantic soft focus, delicate rose petal transitions, refined emotional atmosphere, slow graceful camera movements. Preserve the exact subject identity.' },
+    { id: 'portfolio', name: 'Portfolio Pro', emoji: '📸', desc: 'Net, moderne, précis',
+      prompt: 'professional photography portfolio slideshow, clean modern transitions, precise camera movements, controlled studio-like lighting, minimal contemporary aesthetic, sharp and confident. Preserve the exact subject identity.' },
+    { id: 'trailer', name: 'Bande-annonce', emoji: '🎬', desc: 'Épique, rythmé, cuts',
+      prompt: 'epic movie trailer slideshow, dramatic lighting, punchy rhythmic cuts synced to an implied beat, high contrast cinematic look, thrilling suspenseful atmosphere. Preserve the exact subject identity.' },
+    { id: 'family', name: 'Album Famille', emoji: '🌸', desc: 'Tendresse, intimité, douceur',
+      prompt: 'family album slideshow, tender soft warm light, gentle slow movements, intimate joyful atmosphere, delicate transitions like a sigh, emotional home video feeling. Preserve the exact subject identity.' },
+    { id: 'musicvideo', name: 'Clip Musical', emoji: '🎵', desc: 'Rythme, couleurs, énergie',
+      prompt: 'modern music video slideshow, vibrant saturated colors, energetic rhythmic transitions on the beat, dynamic camera moves, urban pop aesthetic, confident cool atmosphere. Preserve the exact subject identity.' },
+    { id: 'dream', name: 'Onirique', emoji: '🌙', desc: 'Rêve, brume, morphing',
+      prompt: 'dreamlike surreal slideshow, floating particles, soft diffused mystical light, seamless morph transitions between scenes, hypnotic slow motion, ethereal poetic atmosphere. Preserve the exact subject identity.' },
+    { id: 'vintage', name: 'Vintage Super 8', emoji: '📽️', desc: 'Grain, chaleur, 70s',
+      prompt: 'vintage Super 8 film slideshow, grainy texture, warm faded colors, subtle vignette, flickering light, 1970s home movie aesthetic, nostalgic warm atmosphere. Preserve the exact subject identity.' },
+    { id: 'bw', name: 'Noir & Blanc', emoji: '⚫', desc: 'Élégance, contraste, intemporel',
+      prompt: 'elegant black and white slideshow, high contrast monochrome, deep blacks and luminous whites, timeless refined atmosphere, smooth classic transitions. Preserve the exact subject identity.' },
+    { id: 'golden', name: 'Golden Hour', emoji: '🌅', desc: 'Lumière dorée, chaleur',
+      prompt: 'golden hour slideshow, warm amber sunlight, long soft shadows, hazy luminous atmosphere, romantic peaceful mood, seamless warm transitions. Preserve the exact subject identity.' },
+    { id: 'cyber', name: 'Cyber / Néon', emoji: '🌃', desc: 'Futur, néons, glitch',
+      prompt: 'cyberpunk neon slideshow, magenta and cyan lighting, holographic accents, glitch and digital transitions, futuristic urban atmosphere, Blade Runner aesthetic. Preserve the exact subject identity.' },
+    { id: 'epic', name: 'Épique / Héroïque', emoji: '⚔️', desc: 'Grandiose, dramatique',
+      prompt: 'epic heroic slideshow, dramatic god-ray lighting, monumental camera movements, orchestral implied rhythm, awe-inspiring cinematic scale, powerful emotional impact. Preserve the exact subject identity.' },
+    { id: 'minimal', name: 'Minimaliste', emoji: '⬜', desc: 'Épuré, silencieux, zen',
+      prompt: 'minimalist slideshow, clean neutral background, soft even lighting, extremely subtle movements, meditative calm atmosphere, essential and refined transitions. Preserve the exact subject identity.' },
+    { id: 'retro90s', name: 'Rétro 90s', emoji: '📼', desc: 'VHS, couleurs, nostalgie',
+      prompt: '1990s VHS slideshow, retro color grading, scanlines, tracking distortion, nostalgic TV aesthetic, playful warm atmosphere. Preserve the exact subject identity.' },
+    { id: 'aquarelle', name: 'Aquarelle', emoji: '🎨', desc: 'Peinture, douceur, couleurs',
+      prompt: 'watercolor painted slideshow, soft bleeding colors, translucent washes, artistic paper texture, dreamy painterly transitions, poetic gentle atmosphere. Preserve the exact subject identity.' }
+];
+
+// ══════════════════════════════════════════════════════════════════
+// TRANSITIONS
+// ══════════════════════════════════════════════════════════════════
+const TRANSITION_PROMPTS = {
+    fade: 'Each scene ends with a smooth fade to black, then the next scene fades in from black',
+    morph: 'Each scene seamlessly morphs into the next, shapes and colors blending fluidly',
+    match: 'Each scene cuts on a visual match — a shape, color, or movement that connects the two images',
+    zoom: 'Each scene zooms in rapidly toward the subject, then cuts to the next scene',
+    flash: 'Each scene ends with a bright white flash, then the next scene appears',
+    glitch: 'Each scene ends with a digital glitch distortion that transforms into the next scene',
+    cross: 'Each scene cross-dissolves smoothly into the next, overlapping for a moment',
+    whip: 'Each scene ends with a fast whip pan, then the next scene appears'
+};
+
+// ══════════════════════════════════════════════════════════════════
+// MOUVEMENTS
+// ══════════════════════════════════════════════════════════════════
+const RANDOM_ACTIONS = [
+    'very subtle breathing motion, the subject barely moves, alive but still',
+    'a gentle breeze moves the hair and clothing imperceptibly',
+    'the subject\'s eyes blink slowly, expression softens slightly',
+    'light shifts gently across the scene, shadows lengthening',
+    'a single leaf or petal drifts slowly through the frame',
+    'the subject turns their head just slightly, noticing something off-camera',
+    'distant background elements move subtly — traffic, people, water',
+    'the subject smiles faintly, a warm expression blooming slowly',
+    'dust motes float slowly through a beam of light',
+    'clouds drift imperceptibly in the sky above',
+    'the subject\'s chest rises and falls with a calm deep breath',
+    'a soft glow pulses gently, like candlelight or distant lightning'
+];
+
+const RANDOM_CAMERA = [
+    'slow dolly-in, camera gliding forward almost imperceptibly',
+    'static locked-off frame, only subtle internal motion',
+    'slow pan across the scene, revealing details',
+    'subtle parallax movement revealing depth',
+    'camera drifts backward slowly, revealing a bit more of the scene',
+    'gentle handheld sway, intimate and organic',
+    'slow tilt up, revealing more of the subject\'s world',
+    'rack focus from foreground to background, then back',
+    'camera slowly orbits around the subject, revealing the scene',
+    'very slow push-in toward the subject\'s face'
+];
+
+const RANDOM_LIGHTING = [
+    'soft diffused natural light',
+    'warm golden hour backlight',
+    'dramatic side lighting with deep shadows',
+    'gentle ambient glow, almost shadowless',
+    'cool moonlight atmosphere',
+    'warm interior tungsten light',
+    'cinematic rim lighting emphasizing the silhouette',
+    'hazy diffused light with visible rays'
+];
+
+const INTENSITY_PRESETS = {
+    slow: 'very slow contemplative movement, minimal animation, meditative pace, gentle and quiet',
+    moderate: 'moderate fluid movement, clear but controlled motion, balanced and smooth',
+    dynamic: 'dynamic energetic movement, pronounced motion, lively and rhythmic'
+};
+
+const FRAMING_PRESETS = {
+    close: 'extreme close-up framing on the subject, intimate and detailed',
+    medium: 'medium shot framing the subject from waist up, balanced composition',
+    wide: 'wide establishing shot, subject framed with the environment visible'
+};
+
+// ══════════════════════════════════════════════════════════════════
+// ÉTAT GLOBAL
+// ══════════════════════════════════════════════════════════════════
+const state = {
+    images: [],
+    isRunning: false,
+    stopRequested: false,
+    queue: [],
+    completed: 0,
+    failed: 0,
+    selectedEffect: 'nostalgia',
+    mainPrompt: '',
+    framing: 'random',
+    intensity: 'random',
+    durationFrames: 153,
+    transition: 'fade',
+    isLoadingImages: false,
+    creationAttemptsSinceLastError: 0
+};
+
+// ══════════════════════════════════════════════════════════════════
+// CLÉ API
+// ══════════════════════════════════════════════════════════════════
+function getApiKey() {
+    try { return (localStorage.getItem(API_KEY_STORAGE) || '').trim(); }
+    catch (e) { return ''; }
+}
+
+function saveApiKey() {
+    const input = document.getElementById('api-key-input');
+    if (!input) return;
+    const key = input.value.trim();
+    if (!key) {
+        try { localStorage.removeItem(API_KEY_STORAGE); } catch (e) {}
+        updateApiPanel();
+        showToast('Clé supprimée', 'warn');
+        return;
+    }
+    if (!key.startsWith('sk-')) {
+        if (!confirm('La clé ne commence pas par "sk-". La sauvegarder quand même ?')) return;
+    }
+    try {
+        localStorage.setItem(API_KEY_STORAGE, key);
+        updateApiPanel();
+        showToast('Clé API enregistrée ✓', 'success');
+        input.blur();
+    } catch (e) {
+        showToast('Erreur lors de la sauvegarde', 'error');
+    }
+}
+
+function updateApiPanel() {
+    const panel = document.getElementById('api-panel');
+    const input = document.getElementById('api-key-input');
+    const statusLine = document.getElementById('api-status-line');
+    const statusText = document.getElementById('api-status-text');
+    const key = getApiKey();
+    if (!panel || !input || !statusLine || !statusText) return;
+    if (key) {
+        panel.classList.add('ok');
+        statusLine.classList.add('ok');
+        statusText.textContent = 'Clé API active · ' + key.slice(0, 8) + '…' + key.slice(-4);
+        input.value = key;
+        input.placeholder = '';
+    } else {
+        panel.classList.remove('ok');
+        statusLine.classList.remove('ok');
+        statusText.textContent = 'Aucune clé API enregistrée';
+        input.value = '';
+        input.placeholder = 'Collez votre clé API ici (sk-...)';
+    }
+    updateGenerateBtn();
+}
+
+function updateGenerateBtn() {
+    const btn = document.getElementById('generate-btn');
+    if (!btn) return;
+    const hasImages = state.images.length > 0;
+    const hasKey = !!getApiKey();
+    btn.disabled = !hasImages || !hasKey || state.isRunning || state.isLoadingImages;
+    if (state.isLoadingImages) {
+        btn.textContent = 'Chargement des images… (' + state.images.length + ')';
+    } else if (state.isRunning) {
+        const total = state.queue.length;
+        const done = state.completed + state.failed;
+        btn.textContent = 'Création en cours… (' + done + '/' + total + ')';
+    } else if (!hasKey) {
+        btn.textContent = 'Ajoutez votre clé API';
+    } else if (!hasImages) {
+        btn.textContent = 'Ajoutez des images';
+    } else {
+        btn.textContent = 'Créer le diaporama (' + state.images.length + ' scène' + (state.images.length > 1 ? 's' : '') + ')';
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// UTILITAIRES
+// ══════════════════════════════════════════════════════════════════
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function log(msg) { console.log('[Diaporama] ' + msg); }
+function setStatus(text) {
+    const bar = document.getElementById('status-bar');
+    const txt = document.getElementById('status-text');
+    if (!bar || !txt) return;
+    if (text) { bar.classList.add('visible'); txt.textContent = text; }
+    else bar.classList.remove('visible');
+}
+function randomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+}
+function formatEta(seconds) {
+    if (seconds < 60) return Math.round(seconds) + 's';
+    const m = Math.floor(seconds / 60);
+    const s = Math.round(seconds % 60);
+    return m + 'm' + (s > 0 ? ' ' + s + 's' : '');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// IMAGES
+// ══════════════════════════════════════════════════════════════════
+function fileToDataUri(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = () => reject(new Error('Erreur lecture'));
+        reader.readAsDataURL(file);
+    });
+}
+
+function generateThumbnail(dataUri) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            try {
+                const canvas = document.createElement('canvas');
+                const ratio = img.height / img.width;
+                canvas.width = THUMBNAIL_MAX_WIDTH;
+                canvas.height = Math.round(THUMBNAIL_MAX_WIDTH * ratio);
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                resolve(canvas.toDataURL('image/jpeg', 0.7));
+            } catch (e) { resolve(dataUri); }
+        };
+        img.onerror = () => resolve(dataUri);
+        img.src = dataUri;
+    });
+}
+
+async function processOneFile(file) {
+    if (!file.type.startsWith('image/')) return null;
+    if (file.size > MAX_IMAGE_SIZE) { log('Trop lourd : ' + file.name); return null; }
+    try {
+        const dataUri = await fileToDataUri(file);
+        const thumbnail = await generateThumbnail(dataUri);
+        return { file, dataUri, thumbnail, name: file.name, id: Date.now() + Math.random() };
+    } catch (e) { log('Erreur : ' + e.message); return null; }
+}
+
+async function handleFiles(files) {
+    const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+    if (!imageFiles.length) return;
+    state.isLoadingImages = true;
+    updateGenerateBtn();
+    setStatus('Chargement de ' + imageFiles.length + ' image' + (imageFiles.length > 1 ? 's' : '') + '…');
+    const uploadZone = document.getElementById('upload-zone');
+    uploadZone.classList.add('loading');
+    const BATCH = 5;
+    let processed = 0;
+    for (let i = 0; i < imageFiles.length; i += BATCH) {
+        const batch = imageFiles.slice(i, i + BATCH);
+        const results = await Promise.allSettled(batch.map(f => processOneFile(f)));
+        for (const r of results) {
+            if (r.status === 'fulfilled' && r.value) { state.images.push(r.value); processed++; }
+        }
+        renderImages();
+        setStatus('Chargement… ' + processed + '/' + imageFiles.length);
+    }
+    state.isLoadingImages = false;
+    uploadZone.classList.remove('loading');
+    setStatus(null);
+    updateGenerateBtn();
+    updateOrderControls();
+}
+
+function removeImage(id) {
+    state.images = state.images.filter(img => img.id !== id);
+    renderImages();
+    updateOrderControls();
+    updateGenerateBtn();
+}
+
+function moveImage(id, direction) {
+    const idx = state.images.findIndex(img => img.id === id);
+    if (idx < 0) return;
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= state.images.length) return;
+    const tmp = state.images[idx];
+    state.images[idx] = state.images[newIdx];
+    state.images[newIdx] = tmp;
+    renderImages();
+}
+
+function renderImages() {
+    const grid = document.getElementById('images-grid');
+    grid.innerHTML = state.images.map((img, i) =>
+        '<div class="image-card">' +
+        '<img src="' + (img.thumbnail || img.dataUri) + '" alt="" loading="lazy">' +
+        '<div class="order-badge">' + (i + 1) + '</div>' +
+        '<button class="remove-btn" data-remove="' + img.id + '">✕</button>' +
+        '</div>'
+    ).join('');
+    grid.querySelectorAll('[data-remove]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            removeImage(parseFloat(btn.dataset.remove));
+        });
+    });
+}
+
+function updateOrderControls() {
+    const el = document.getElementById('order-controls');
+    if (!el) return;
+    el.style.display = state.images.length > 1 ? 'flex' : 'none';
+}
+
+// ══════════════════════════════════════════════════════════════════
+// RENDU PRESETS
+// ══════════════════════════════════════════════════════════════════
+function renderPromptPresets() {
+    const container = document.getElementById('prompt-presets');
+    container.innerHTML = PROMPT_PRESETS.map((p, i) =>
+        '<div class="prompt-preset" data-preset="' + i + '">' + esc(p.label) + '</div>'
+    ).join('');
+    container.querySelectorAll('.prompt-preset').forEach(el => {
+        el.addEventListener('click', () => {
+            const idx = parseInt(el.dataset.preset, 10);
+            const preset = PROMPT_PRESETS[idx];
+            if (!preset) return;
+            const ta = document.getElementById('main-prompt');
+            ta.value = preset.text;
+            state.mainPrompt = preset.text;
+            ta.focus();
+            showToast('Exemple appliqué', 'success', 1200);
+        });
+    });
+}
+
+function renderStyles() {
+    const container = document.getElementById('styles-grid');
+    let html = '';
+
+    html += '<div class="no-style-card ' + (state.selectedEffect === null ? 'selected' : '') + '" data-effect="none">' +
+        (state.selectedEffect === null
+            ? '✓ Aucun thème — votre prompt seul gère le diaporama'
+            : '🚫 Aucun thème (prompt seul)') +
+        '</div>';
+
+    html += '<div class="style-category-header">🎬 Thèmes de diaporama</div>';
+    html += '<div class="style-category-desc">Chaque thème définit l\'ambiance, les transitions et le rythme global du diaporama.</div>';
+
+    html += SLIDESHOW_THEMES.map(s =>
+        '<div class="style-card ' + (state.selectedEffect === s.id ? 'selected' : '') + '" data-effect="' + s.id + '">' +
+        '<div class="style-emoji">' + s.emoji + '</div>' +
+        '<div>' +
+        '<div class="style-name">' + esc(s.name) + '</div>' +
+        '<div class="style-desc">' + esc(s.desc) + '</div>' +
+        '</div>' +
+        '</div>'
+    ).join('');
+
+    container.innerHTML = html;
+    container.querySelectorAll('[data-effect]').forEach(el => {
+        el.addEventListener('click', () => {
+            const val = el.dataset.effect;
+            state.selectedEffect = (val === 'none') ? null : val;
+            renderStyles();
+        });
+    });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// CONSTRUCTION DU PROMPT
+// ══════════════════════════════════════════════════════════════════
+function buildPrompt(sceneIndex, totalScenes) {
+    const theme = state.selectedEffect ? SLIDESHOW_THEMES.find(s => s.id === state.selectedEffect) : null;
+    const hasUserPrompt = state.mainPrompt && state.mainPrompt.trim().length > 0;
+    const parts = [];
+
+    parts.push(
+        'Animate this exact image as scene ' + (sceneIndex + 1) + ' of ' + totalScenes + ' in a cinematic slideshow. ' +
+        'The subject must remain IDENTICAL to the input image: same face, same expression, same clothing, same pose at the start, same identity. ' +
+        'This is a CONTINUATION of the source image, not a re-imagination. ' +
+        'Preserve the exact composition, framing, and layout of the original image. ' +
+        'The camera does NOT change the subject. Only subtle motion, breathing, light, and atmosphere are animated. ' +
+        'Sound design: soft ambient textures, gentle room tone, NO music, NO dialogue.'
+    );
+
+    if (theme) parts.push(theme.prompt);
+
+    if (hasUserPrompt) {
+        parts.push('Artistic direction (highest priority, must not change the subject identity or composition): ' + state.mainPrompt.trim());
+    }
+
+    // Transition
+    if (state.transition && TRANSITION_PROMPTS[state.transition]) {
+        parts.push('Transition to the next scene: ' + TRANSITION_PROMPTS[state.transition]);
+    }
+
+    if (state.framing !== 'random' && FRAMING_PRESETS[state.framing]) {
+        parts.push(FRAMING_PRESETS[state.framing]);
+    }
+
+    if (state.intensity !== 'random' && INTENSITY_PRESETS[state.intensity]) {
+        parts.push(INTENSITY_PRESETS[state.intensity]);
+    } else {
+        parts.push(INTENSITY_PRESETS.moderate);
+    }
+
+    parts.push(randomItem(RANDOM_ACTIONS));
+    parts.push(randomItem(RANDOM_CAMERA));
+    parts.push(randomItem(RANDOM_LIGHTING));
+    parts.push('Portrait orientation 9:16 vertical, 24fps, no text, no subtitles, no watermarks, consistent character design with the source image');
+
+    return parts.join('. ');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// API
+// ══════════════════════════════════════════════════════════════════
+async function apiFetch(url, options = {}, label = 'API') {
+    for (let attempt = 0; attempt < 7; attempt++) {
+        if (state.stopRequested) throw new Error('Arrêt demandé');
+        try {
+            const res = await fetch(url, options);
+            if (res.status === 429) {
+                state.creationAttemptsSinceLastError = 0;
+                if (createIntervalMs < CREATE_INTERVAL_SAFE) {
+                    createIntervalMs = Math.min(createIntervalMs + 8000, CREATE_INTERVAL_MAX);
+                }
+                const wait = [15, 30, 45, 60, 90, 120, 180][Math.min(attempt, 6)];
+                setStatus('Le diaporama se prépare… (' + wait + 's)');
+                await sleep(wait * 1000);
+                continue;
+            }
+            if (res.status === 503) {
+                const wait = [5, 10, 15, 20, 30, 45][Math.min(attempt, 5)];
+                setStatus('La scène se prépare… (' + wait + 's)');
+                await sleep(wait * 1000);
+                continue;
+            }
+            if (res.ok && createIntervalMs > CREATE_INTERVAL_MIN) {
+                state.creationAttemptsSinceLastError++;
+                if (state.creationAttemptsSinceLastError >= 3) {
+                    createIntervalMs = Math.max(createIntervalMs - 4000, CREATE_INTERVAL_MIN);
+                    state.creationAttemptsSinceLastError = 0;
+                }
+            }
+            return res;
+        } catch (e) {
+            if (e.message === 'Arrêt demandé') throw e;
+            const wait = [3, 5, 8, 12, 20, 30][Math.min(attempt, 5)];
+            setStatus('Connexion… (' + wait + 's)');
+            await sleep(wait * 1000);
+        }
+    }
+    return fetch(url, options);
+}
+
+async function createVideoTask(imageDataUri, prompt) {
+    const body = {
+        model: MODEL_VIDEO,
+        prompt: prompt,
+        image: imageDataUri,
+        num_frames: state.durationFrames,
+        frame_rate: FRAME_RATE
+    };
+    const res = await apiFetch(API_BASE + '/videos', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + getApiKey(), 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    }, 'Création');
+    if (!res.ok) {
+        const err = await res.text();
+        throw new Error('HTTP ' + res.status + ' — ' + err.slice(0, 200));
+    }
+    const data = await res.json();
+    const videoId = data.video_id || data.id || data.task_id;
+    if (!videoId) throw new Error('Pas de video_id retourné');
+    return videoId;
+}
+
+async function pollVideo(videoId, onProgress) {
+    const estimatedMs = estimateGenerationTime(state.durationFrames);
+    const estimatedSec = estimatedMs / 1000;
+    let remaining = Math.max(20, Math.floor(estimatedSec * 0.8));
+    while (remaining > 0) {
+        if (state.stopRequested) throw new Error('Arrêt demandé');
+        onProgress('La scène se prépare… — ' + remaining + 's');
+        await sleep(1000);
+        remaining--;
+    }
+    for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt++) {
+        if (state.stopRequested) throw new Error('Arrêt demandé');
+        if (attempt > 0) {
+            let r = POLL_INTERVAL_SEC;
+            while (r > 0) {
+                if (state.stopRequested) throw new Error('Arrêt demandé');
+                onProgress('L\'image prend vie… — ' + r + 's');
+                await sleep(1000);
+                r--;
+            }
+        }
+        const url = POLL_BASE + '?video_id=' + encodeURIComponent(videoId) + '&model_name=' + encodeURIComponent(MODEL_VIDEO);
+        const res = await apiFetch(url, {
+            method: 'GET',
+            headers: { 'Authorization': 'Bearer ' + getApiKey() }
+        }, 'Polling');
+        const d = await res.json();
+        const status = d.status || 'unknown';
+        const progress = d.progress || 0;
+        onProgress('Création… — ' + progress + '%');
+        if (status === 'completed' || status === 'succeeded' || status === 'done') {
+            const videoUrl = (d.metadata && d.metadata.url) || d.url || (d.output && d.output.url);
+            if (!videoUrl) throw new Error('Terminé mais pas d\'URL');
+            return videoUrl;
+        }
+        if (status === 'failed' || status === 'error' || status === 'cancelled') {
+            throw new Error('Échec (' + status + ')');
+        }
+    }
+    throw new Error('Délai maximal dépassé');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// QUEUE
+// ══════════════════════════════════════════════════════════════════
+function renderQueue() {
+    const queueEl = document.getElementById('queue');
+    if (!state.queue.length) { queueEl.style.display = 'none'; return; }
+    queueEl.style.display = 'block';
+    const total = state.queue.length;
+    const done = state.completed + state.failed;
+    const inProgress = state.queue.filter(q => q.status === 'processing').length;
+    const pending = total - done - inProgress;
+    const estGen = estimateGenerationTime(state.durationFrames) / 1000;
+    const eta = pending > 0
+        ? (pending * (createIntervalMs / 1000)) + estGen
+        : (inProgress * estGen / Math.max(inProgress, 1));
+    let html = '<div class="queue-summary">' +
+        '<span class="progress-text">Progression : ' + done + '/' + total + '</span>' +
+        '<span class="eta-text">' + (done < total ? '≈ ' + formatEta(eta) + ' restant' : 'Terminé') + '</span>' +
+        '</div>';
+    const visible = state.queue.slice(0, MAX_VISIBLE_QUEUE);
+    const hidden = state.queue.length - visible.length;
+    html += visible.map(item => {
+        let icon = '○', statusText = 'En file', cls = 'pending';
+        if (item.status === 'creating') { icon = '◐'; statusText = 'Préparation…'; cls = 'creating'; }
+        else if (item.status === 'processing') { icon = '◐'; statusText = item.progress || 'En cours…'; cls = 'processing'; }
+        else if (item.status === 'done') { icon = '●'; statusText = 'Terminé'; cls = 'done'; }
+        else if (item.status === 'failed') { icon = '✕'; statusText = 'Échec'; cls = 'failed'; }
+        return '<div class="queue-item ' + cls + '">' +
+            '<div class="q-icon">' + icon + '</div>' +
+            '<div class="q-name">Scène ' + (item.imageIndex + 1) + '</div>' +
+            '<div class="q-status">' + esc(statusText) + '</div>' +
+            '</div>';
+    }).join('');
+    if (hidden > 0) {
+        html += '<div class="queue-more">… et ' + hidden + ' autre' + (hidden > 1 ? 's' : '') + '</div>';
+    }
+    queueEl.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// GALERIE
+// ══════════════════════════════════════════════════════════════════
+async function downloadGalleryVideo(videoUrl, filename, btn) {
+    const originalLabel = btn.textContent;
+    btn.classList.add('working');
+    btn.textContent = '…';
+    try {
+        const res = await fetch(videoUrl);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+        showToast('Téléchargement lancé', 'success', 1500);
+    } catch (e) {
+        log('Téléchargement échoué, ouverture directe : ' + e.message);
+        window.open(videoUrl, '_blank');
+        showToast('Téléchargement direct indisponible, ouverture dans un onglet', 'warn');
+    } finally {
+        btn.classList.remove('working');
+        btn.textContent = originalLabel;
+    }
+}
+
+function addToGallery(videoUrl, label) {
+    const galleryEl = document.getElementById('gallery');
+    const galleryGrid = document.getElementById('gallery-grid');
+    galleryEl.style.display = 'block';
+    const el = document.createElement('div');
+    el.className = 'gallery-item';
+    el.innerHTML = '<video controls preload="metadata" muted playsinline>' +
+        '<source src="' + videoUrl + '" type="video/mp4">' +
+        '</video>' +
+        '<div class="g-caption">' +
+        '<span>' + esc(label) + '</span>' +
+        '<button type="button" class="g-download">⬇️ Télécharger</button>' +
+        '</div>';
+    const downloadBtn = el.querySelector('.g-download');
+    const safeName = (label || 'scene').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    downloadBtn.addEventListener('click', () => {
+        downloadGalleryVideo(videoUrl, 'diaporama-' + safeName + '.mp4', downloadBtn);
+    });
+    galleryGrid.appendChild(el);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// PIPELINE
+// ══════════════════════════════════════════════════════════════════
+async function createTaskOnly(item) {
+    item.status = 'creating';
+    item.progress = 'Préparation…';
+    renderQueue();
+    const prompt = buildPrompt(item.imageIndex, state.queue.length);
+    item.prompt = prompt;
+    log('[Scène ' + (item.imageIndex + 1) + '] Création…');
+    const videoId = await createVideoTask(item.image.dataUri, prompt);
+    item.videoId = videoId;
+    item.startTime = Date.now();
+    item.status = 'processing';
+    item.progress = 'En cours…';
+    renderQueue();
+    log('[Scène ' + (item.imageIndex + 1) + '] Tâche : ' + String(videoId).slice(0, 30) + '…');
+    return videoId;
+}
+
+async function pollTaskAndDisplay(item) {
+    try {
+        const videoUrl = await pollVideo(item.videoId, (prog) => {
+            item.progress = prog;
+            renderQueue();
+        });
+        const elapsed = Date.now() - item.startTime;
+        recordGenerationTime(state.durationFrames, elapsed);
+        log('[Scène ' + (item.imageIndex + 1) + '] Terminée en ' + (elapsed / 1000).toFixed(1) + 's');
+        item.status = 'done';
+        item.videoUrl = videoUrl;
+        item.progress = 'Terminé';
+        state.completed++;
+        renderQueue();
+        updateGenerateBtn();
+        addToGallery(videoUrl, 'Scène ' + (item.imageIndex + 1));
+    } catch (e) {
+        if (e.message === 'Arrêt demandé') {
+            item.status = 'failed';
+            item.progress = 'Arrêté';
+        } else {
+            log('[Scène ' + (item.imageIndex + 1) + '] ' + e.message);
+            item.status = 'failed';
+            item.progress = 'Échec';
+            state.failed++;
+        }
+        renderQueue();
+        updateGenerateBtn();
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// WORKFLOW
+// ══════════════════════════════════════════════════════════════════
+async function startGeneration() {
+    if (state.isRunning || !state.images.length) return;
+    if (!getApiKey()) {
+        showToast('Ajoutez d\'abord votre clé API', 'error');
+        document.getElementById('api-key-input').focus();
+        return;
+    }
+    state.mainPrompt = document.getElementById('main-prompt').value.trim();
+    if (!state.mainPrompt && !state.selectedEffect) {
+        if (!confirm('Ni prompt ni thème sélectionné. Continuer avec le thème par défaut ?')) return;
+    }
+    state.isRunning = true;
+    state.stopRequested = false;
+    state.completed = 0;
+    state.failed = 0;
+    state.creationAttemptsSinceLastError = 0;
+    createIntervalMs = CREATE_INTERVAL_MIN;
+    state.queue = state.images.map((img, i) => ({
+        imageIndex: i, image: img, status: 'pending', progress: null,
+        videoId: null, videoUrl: null, prompt: null, startTime: null
+    }));
+    document.getElementById('gallery-grid').innerHTML = '';
+    document.getElementById('gallery').style.display = 'none';
+    document.getElementById('stop-btn').classList.add('visible');
+    document.getElementById('generate-btn').disabled = true;
+    await ensureWakeLockActive();
+    renderQueue();
+    updateGenerateBtn();
+    log('Démarrage — ' + state.images.length + ' scènes');
+    log('Thème : ' + (state.selectedEffect || 'aucun'));
+    log('Transition : ' + state.transition);
+    const totalStart = Date.now();
+    const pollingTasks = [];
+    try {
+        for (let i = 0; i < state.queue.length; i++) {
+            if (state.stopRequested) break;
+            const item = state.queue[i];
+            try {
+                await createTaskOnly(item);
+                pollingTasks.push(pollTaskAndDisplay(item));
+            } catch (e) {
+                if (e.message === 'Arrêt demandé') break;
+                log('[Scène ' + (i + 1) + '] Échec : ' + e.message);
+                item.status = 'failed';
+                item.progress = 'Échec';
+                state.failed++;
+                renderQueue();
+                updateGenerateBtn();
+            }
+            if (i < state.queue.length - 1 && !state.stopRequested) {
+                const waitSec = Math.ceil(createIntervalMs / 1000);
+                for (let r = waitSec; r > 0; r--) {
+                    if (state.stopRequested) break;
+                    setStatus('Respiration créative… — Scène ' + (i + 2) + '/' + state.queue.length + ' dans ' + r + 's');
+                    await sleep(1000);
+                }
+            }
+        }
+        if (pollingTasks.length > 0) {
+            setStatus('Finalisation…');
+            await Promise.allSettled(pollingTasks);
+        }
+    } catch (e) { log('Erreur globale : ' + e.message); }
+    const totalElapsed = (Date.now() - totalStart) / 1000;
+    const summary = state.stopRequested
+        ? 'Arrêté — ' + state.completed + '/' + state.queue.length + ' scènes'
+        : '✦ ' + state.completed + '/' + state.queue.length + ' scènes créées en ' + formatEta(totalElapsed) + ' ✦';
+    log(summary);
+    setStatus(summary);
+    await sleep(4000);
+    setStatus(null);
+    state.isRunning = false;
+    state.stopRequested = false;
+    document.getElementById('stop-btn').classList.remove('visible');
+    updateGenerateBtn();
+    showToast(state.completed + ' scène' + (state.completed > 1 ? 's' : '') + ' créée' + (state.completed > 1 ? 's' : ''), 'success');
+}
+
+function stopGeneration() {
+    if (!state.isRunning) return;
+    state.stopRequested = true;
+    log('Arrêt demandé');
+    setStatus('Arrêt en cours…');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════
+(function init() {
+    const saveBtn = document.getElementById('api-save-btn');
+    if (saveBtn) saveBtn.addEventListener('click', saveApiKey);
+    const stopBtn = document.getElementById('stop-btn');
+    if (stopBtn) stopBtn.addEventListener('click', stopGeneration);
+    const apiInput = document.getElementById('api-key-input');
+    if (apiInput) {
+        apiInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); saveApiKey(); }
+        });
+    }
+    document.querySelectorAll('[data-toggle]').forEach(header => {
+        header.addEventListener('click', () => {
+            document.getElementById(header.dataset.toggle).classList.toggle('open');
+        });
+    });
+    const uploadZone = document.getElementById('upload-zone');
+    const fileInput = document.getElementById('file-input');
+    if (uploadZone && fileInput) {
+        uploadZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', e => {
+            handleFiles(e.target.files);
+            fileInput.value = '';
+        });
+    }
+    // Ordre : mélanger / inverser / trier
+    const shuffleBtn = document.getElementById('shuffle-btn');
+    if (shuffleBtn) {
+        shuffleBtn.addEventListener('click', () => {
+            for (let i = state.images.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [state.images[i], state.images[j]] = [state.images[j], state.images[i]];
+            }
+            renderImages();
+            showToast('Images mélangées', 'success', 1500);
+        });
+    }
+    const reverseBtn = document.getElementById('reverse-btn');
+    if (reverseBtn) {
+        reverseBtn.addEventListener('click', () => {
+            state.images.reverse();
+            renderImages();
+            showToast('Ordre inversé', 'success', 1500);
+        });
+    }
+    const sortNameBtn = document.getElementById('sort-name-btn');
+    if (sortNameBtn) {
+        sortNameBtn.addEventListener('click', () => {
+            state.images.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            renderImages();
+            showToast('Trié par nom', 'success', 1500);
+        });
+    }
+    const mainPrompt = document.getElementById('main-prompt');
+    if (mainPrompt) {
+        mainPrompt.addEventListener('input', e => { state.mainPrompt = e.target.value; });
+    }
+    const durationSelect = document.getElementById('duration-select');
+    if (durationSelect) {
+        durationSelect.addEventListener('change', e => { state.durationFrames = parseInt(e.target.value, 10); });
+    }
+    const framingSelect = document.getElementById('framing-select');
+    if (framingSelect) {
+        framingSelect.addEventListener('change', e => { state.framing = e.target.value; });
+    }
+    const intensitySelect = document.getElementById('intensity-select');
+    if (intensitySelect) {
+        intensitySelect.addEventListener('change', e => { state.intensity = e.target.value; });
+    }
+    const transitionSelect = document.getElementById('transition-select');
+    if (transitionSelect) {
+        transitionSelect.addEventListener('change', e => { state.transition = e.target.value; });
+    }
+    const generateBtn = document.getElementById('generate-btn');
+    if (generateBtn) generateBtn.addEventListener('click', startGeneration);
+    const wakeBtn = document.getElementById('wake-toggle-btn');
+    if (wakeBtn) wakeBtn.addEventListener('click', toggleWakeLock);
+    try {
+        const saved = localStorage.getItem(WAKE_LOCK_PREF);
+        wakeLockEnabled = saved === '1';
+    } catch (e) {}
+    if (wakeLockEnabled) {
+        activateWakeLock().then(() => updateWakeStatus());
+    }
+    updateApiPanel();
+    updateTimingDisplay();
+    updateWakeStatus();
+    renderPromptPresets();
+    renderStyles();
+    renderImages();
+    renderQueue();
+    updateOrderControls();
+    log('Prêt.');
+})();
+</script>
+
+</body>
+</html>
