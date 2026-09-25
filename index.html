@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Diaporama Vidéo — Souvenirs en mouvement</title>
+<title>Diaporama Vidéo - Souvenirs en mouvement</title>
 <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     :root {
@@ -479,7 +479,7 @@ select:focus { outline: none; border-color: var(--accent); }
             <textarea class="prompt-main" id="main-prompt"
                 placeholder="Décrivez le diaporama que vous voulez. Par exemple :
 
-« Chaque image s’anime doucement comme un souvenir qui revient. Mouvements subtils, lumière chaude, ambiance nostalgique. Les transitions entre les scènes sont fluides comme un fondu au noir. Gardez chaque sujet exactement identique à la photo originale. »”></textarea>
+“ Chaque image s’anime doucement comme un souvenir qui revient. Mouvements subtils, lumière chaude, ambiance nostalgique. Les transitions entre les scènes sont fluides comme un fondu au noir. Gardez chaque sujet exactement identique à la photo originale. “”></textarea>
 <div class="prompt-presets" id="prompt-presets"></div>
 <div class="prompt-main-hint">
 💡 Ce prompt s’applique à <strong>toutes</strong> les images. Le thème choisi ci-dessous définit les transitions, l’ambiance et le rythme du diaporama.
@@ -568,7 +568,7 @@ select:focus { outline: none; border-color: var(--accent); }
 
 <div class="status-bar" id="status-bar">
     <div class="spinner"></div>
-    <span id="status-text">Préparation…</span>
+    <span id="status-text">Préparation...</span>
 </div>
 
 <div class="toast" id="toast">
@@ -876,7 +876,7 @@ const SLIDESHOW_THEMES = [
 const TRANSITION_PROMPTS = {
     fade: 'Each scene ends with a smooth fade to black, then the next scene fades in from black',
     morph: 'Each scene seamlessly morphs into the next, shapes and colors blending fluidly',
-    match: 'Each scene cuts on a visual match — a shape, color, or movement that connects the two images',
+    match: 'Each scene cuts on a visual match - a shape, color, or movement that connects the two images',
     zoom: 'Each scene zooms in rapidly toward the subject, then cuts to the next scene',
     flash: 'Each scene ends with a bright white flash, then the next scene appears',
     glitch: 'Each scene ends with a digital glitch distortion that transforms into the next scene',
@@ -894,7 +894,7 @@ const RANDOM_ACTIONS = [
     'light shifts gently across the scene, shadows lengthening',
     'a single leaf or petal drifts slowly through the frame',
     'the subject turns their head just slightly, noticing something off-camera',
-    'distant background elements move subtly — traffic, people, water',
+    'distant background elements move subtly - traffic, people, water',
     'the subject smiles faintly, a warm expression blooming slowly',
     'dust motes float slowly through a beam of light',
     'clouds drift imperceptibly in the sky above',
@@ -999,7 +999,7 @@ function updateApiPanel() {
     if (key) {
         panel.classList.add('ok');
         statusLine.classList.add('ok');
-        statusText.textContent = 'Clé API active · ' + key.slice(0, 8) + '…' + key.slice(-4);
+        statusText.textContent = 'Clé API active · ' + key.slice(0, 8) + '...' + key.slice(-4);
         input.value = key;
         input.placeholder = '';
     } else {
@@ -1019,11 +1019,11 @@ function updateGenerateBtn() {
     const hasKey = !!getApiKey();
     btn.disabled = !hasImages || !hasKey || state.isRunning || state.isLoadingImages;
     if (state.isLoadingImages) {
-        btn.textContent = 'Chargement des images… (' + state.images.length + ')';
+        btn.textContent = 'Chargement des images... (' + state.images.length + ')';
     } else if (state.isRunning) {
         const total = state.queue.length;
         const done = state.completed + state.failed;
-        btn.textContent = 'Création en cours… (' + done + '/' + total + ')';
+        btn.textContent = 'Création en cours... (' + done + '/' + total + ')';
     } else if (!hasKey) {
         btn.textContent = 'Ajoutez votre clé API';
     } else if (!hasImages) {
@@ -1104,7 +1104,7 @@ async function handleFiles(files) {
     if (!imageFiles.length) return;
     state.isLoadingImages = true;
     updateGenerateBtn();
-    setStatus('Chargement de ' + imageFiles.length + ' image' + (imageFiles.length > 1 ? 's' : '') + '…');
+    setStatus('Chargement de ' + imageFiles.length + ' image' + (imageFiles.length > 1 ? 's' : '') + '...');
     const uploadZone = document.getElementById('upload-zone');
     uploadZone.classList.add('loading');
     const BATCH = 5;
@@ -1116,7 +1116,7 @@ async function handleFiles(files) {
             if (r.status === 'fulfilled' && r.value) { state.images.push(r.value); processed++; }
         }
         renderImages();
-        setStatus('Chargement… ' + processed + '/' + imageFiles.length);
+        setStatus('Chargement... ' + processed + '/' + imageFiles.length);
     }
     state.isLoadingImages = false;
     uploadZone.classList.remove('loading');
@@ -1194,7 +1194,7 @@ function renderStyles() {
 
     html += '<div class="no-style-card ' + (state.selectedEffect === null ? 'selected' : '') + '" data-effect="none">' +
         (state.selectedEffect === null
-            ? '✓ Aucun thème — votre prompt seul gère le diaporama'
+            ? '✓ Aucun thème - votre prompt seul gère le diaporama'
             : '🚫 Aucun thème (prompt seul)') +
         '</div>';
 
@@ -1281,13 +1281,13 @@ async function apiFetch(url, options = {}, label = 'API') {
                     createIntervalMs = Math.min(createIntervalMs + 8000, CREATE_INTERVAL_MAX);
                 }
                 const wait = [15, 30, 45, 60, 90, 120, 180][Math.min(attempt, 6)];
-                setStatus('Le diaporama se prépare… (' + wait + 's)');
+                setStatus('Le diaporama se prépare... (' + wait + 's)');
                 await sleep(wait * 1000);
                 continue;
             }
             if (res.status === 503) {
                 const wait = [5, 10, 15, 20, 30, 45][Math.min(attempt, 5)];
-                setStatus('La scène se prépare… (' + wait + 's)');
+                setStatus('La scène se prépare... (' + wait + 's)');
                 await sleep(wait * 1000);
                 continue;
             }
@@ -1302,7 +1302,7 @@ async function apiFetch(url, options = {}, label = 'API') {
         } catch (e) {
             if (e.message === 'Arrêt demandé') throw e;
             const wait = [3, 5, 8, 12, 20, 30][Math.min(attempt, 5)];
-            setStatus('Connexion… (' + wait + 's)');
+            setStatus('Connexion... (' + wait + 's)');
             await sleep(wait * 1000);
         }
     }
@@ -1324,7 +1324,7 @@ async function createVideoTask(imageDataUri, prompt) {
     }, 'Création');
     if (!res.ok) {
         const err = await res.text();
-        throw new Error('HTTP ' + res.status + ' — ' + err.slice(0, 200));
+        throw new Error('HTTP ' + res.status + ' - ' + err.slice(0, 200));
     }
     const data = await res.json();
     const videoId = data.video_id || data.id || data.task_id;
@@ -1338,7 +1338,7 @@ async function pollVideo(videoId, onProgress) {
     let remaining = Math.max(20, Math.floor(estimatedSec * 0.8));
     while (remaining > 0) {
         if (state.stopRequested) throw new Error('Arrêt demandé');
-        onProgress('La scène se prépare… — ' + remaining + 's');
+        onProgress('La scène se prépare... - ' + remaining + 's');
         await sleep(1000);
         remaining--;
     }
@@ -1348,7 +1348,7 @@ async function pollVideo(videoId, onProgress) {
             let r = POLL_INTERVAL_SEC;
             while (r > 0) {
                 if (state.stopRequested) throw new Error('Arrêt demandé');
-                onProgress('L\'image prend vie… — ' + r + 's');
+                onProgress('L\'image prend vie... - ' + r + 's');
                 await sleep(1000);
                 r--;
             }
@@ -1361,7 +1361,7 @@ async function pollVideo(videoId, onProgress) {
         const d = await res.json();
         const status = d.status || 'unknown';
         const progress = d.progress || 0;
-        onProgress('Création… — ' + progress + '%');
+        onProgress('Création... - ' + progress + '%');
         if (status === 'completed' || status === 'succeeded' || status === 'done') {
             const videoUrl = (d.metadata && d.metadata.url) || d.url || (d.output && d.output.url);
             if (!videoUrl) throw new Error('Terminé mais pas d\'URL');
@@ -1397,8 +1397,8 @@ function renderQueue() {
     const hidden = state.queue.length - visible.length;
     html += visible.map(item => {
         let icon = '○', statusText = 'En file', cls = 'pending';
-        if (item.status === 'creating') { icon = '◐'; statusText = 'Préparation…'; cls = 'creating'; }
-        else if (item.status === 'processing') { icon = '◐'; statusText = item.progress || 'En cours…'; cls = 'processing'; }
+        if (item.status === 'creating') { icon = '◐'; statusText = 'Préparation...'; cls = 'creating'; }
+        else if (item.status === 'processing') { icon = '◐'; statusText = item.progress || 'En cours...'; cls = 'processing'; }
         else if (item.status === 'done') { icon = '●'; statusText = 'Terminé'; cls = 'done'; }
         else if (item.status === 'failed') { icon = '✕'; statusText = 'Échec'; cls = 'failed'; }
         return '<div class="queue-item ' + cls + '">' +
@@ -1408,7 +1408,7 @@ function renderQueue() {
             '</div>';
     }).join('');
     if (hidden > 0) {
-        html += '<div class="queue-more">… et ' + hidden + ' autre' + (hidden > 1 ? 's' : '') + '</div>';
+        html += '<div class="queue-more">... et ' + hidden + ' autre' + (hidden > 1 ? 's' : '') + '</div>';
     }
     queueEl.innerHTML = html;
 }
@@ -1419,7 +1419,7 @@ function renderQueue() {
 async function downloadGalleryVideo(videoUrl, filename, btn) {
     const originalLabel = btn.textContent;
     btn.classList.add('working');
-    btn.textContent = '…';
+    btn.textContent = '...';
     try {
         const res = await fetch(videoUrl);
         if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -1469,18 +1469,18 @@ function addToGallery(videoUrl, label) {
 // ══════════════════════════════════════════════════════════════════
 async function createTaskOnly(item) {
     item.status = 'creating';
-    item.progress = 'Préparation…';
+    item.progress = 'Préparation...';
     renderQueue();
     const prompt = buildPrompt(item.imageIndex, state.queue.length);
     item.prompt = prompt;
-    log('[Scène ' + (item.imageIndex + 1) + '] Création…');
+    log('[Scène ' + (item.imageIndex + 1) + '] Création...');
     const videoId = await createVideoTask(item.image.dataUri, prompt);
     item.videoId = videoId;
     item.startTime = Date.now();
     item.status = 'processing';
-    item.progress = 'En cours…';
+    item.progress = 'En cours...';
     renderQueue();
-    log('[Scène ' + (item.imageIndex + 1) + '] Tâche : ' + String(videoId).slice(0, 30) + '…');
+    log('[Scène ' + (item.imageIndex + 1) + '] Tâche : ' + String(videoId).slice(0, 30) + '...');
     return videoId;
 }
 
@@ -1546,7 +1546,7 @@ async function startGeneration() {
     await ensureWakeLockActive();
     renderQueue();
     updateGenerateBtn();
-    log('Démarrage — ' + state.images.length + ' scènes');
+    log('Démarrage - ' + state.images.length + ' scènes');
     log('Thème : ' + (state.selectedEffect || 'aucun'));
     log('Transition : ' + state.transition);
     const totalStart = Date.now();
@@ -1571,19 +1571,19 @@ async function startGeneration() {
                 const waitSec = Math.ceil(createIntervalMs / 1000);
                 for (let r = waitSec; r > 0; r--) {
                     if (state.stopRequested) break;
-                    setStatus('Respiration créative… — Scène ' + (i + 2) + '/' + state.queue.length + ' dans ' + r + 's');
+                    setStatus('Respiration créative... - Scène ' + (i + 2) + '/' + state.queue.length + ' dans ' + r + 's');
                     await sleep(1000);
                 }
             }
         }
         if (pollingTasks.length > 0) {
-            setStatus('Finalisation…');
+            setStatus('Finalisation...');
             await Promise.allSettled(pollingTasks);
         }
     } catch (e) { log('Erreur globale : ' + e.message); }
     const totalElapsed = (Date.now() - totalStart) / 1000;
     const summary = state.stopRequested
-        ? 'Arrêté — ' + state.completed + '/' + state.queue.length + ' scènes'
+        ? 'Arrêté - ' + state.completed + '/' + state.queue.length + ' scènes'
         : '✦ ' + state.completed + '/' + state.queue.length + ' scènes créées en ' + formatEta(totalElapsed) + ' ✦';
     log(summary);
     setStatus(summary);
@@ -1600,7 +1600,7 @@ function stopGeneration() {
     if (!state.isRunning) return;
     state.stopRequested = true;
     log('Arrêt demandé');
-    setStatus('Arrêt en cours…');
+    setStatus('Arrêt en cours...');
 }
 
 // ══════════════════════════════════════════════════════════════════
