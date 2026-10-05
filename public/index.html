@@ -1,0 +1,1959 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Studio Mode — Vos vêtements en mouvement</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    :root {
+        --bg: #0a0a0a; --panel: #141414; --panel-2: #1c1c1c; --border: #2a2a2a;
+        --ink: #f5f5f5; --ink-dim: #888; --ink-faint: #555;
+        --accent: #d4af37; --accent-2: #f4e4a8; --accent-3: #b8942e;
+        --success: #4ade80; --error: #f87171; --warn: #fbbf24; --info: #60a5fa;
+        --radius: 12px;
+    }
+    body {
+        font-family: 'Helvetica Neue', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+        background: var(--bg); color: var(--ink); min-height: 100vh;
+        padding: 1.5rem 1rem 6rem; font-size: 15px; line-height: 1.5;
+        max-width: 900px; margin: 0 auto;
+        background-image:
+            radial-gradient(circle at 15% 0%, rgba(212,175,55,0.08) 0%, transparent 50%),
+            radial-gradient(circle at 85% 100%, rgba(212,175,55,0.05) 0%, transparent 50%);
+    }
+    header { margin-bottom: 1.5rem; text-align: center; }
+    h1 {
+        font-size: 1.5rem; font-weight: 300; letter-spacing: 0.15em;
+        margin-bottom: 0.4rem; text-transform: uppercase;
+        color: var(--accent);
+        font-family: 'Didot', 'Times New Roman', serif;
+    }
+    .subtitle { font-size: 0.75rem; color: var(--ink-dim); letter-spacing: 0.2em; text-transform: uppercase; }
+
+    .toast {
+        position: fixed; top: 1.5rem; left: 50%;
+        transform: translateX(-50%) translateY(-100px);
+        background: var(--accent); color: #0a0a0a;
+        padding: 0.85rem 1.4rem; border-radius: 10px;
+        font-size: 0.85rem; font-weight: 700;
+        box-shadow: 0 4px 24px rgba(212,175,55,0.4);
+        z-index: 1000; opacity: 0;
+        transition: transform 0.35s ease, opacity 0.35s ease;
+        max-width: 90vw; text-align: center;
+        display: flex; align-items: center; gap: 0.5rem;
+    }
+    .toast.visible { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .toast.success { background: var(--success); color: #0a0a0a; }
+    .toast.error { background: var(--error); color: #fff; }
+    .toast.warn { background: var(--warn); color: #0a0a0a; }
+    .toast .toast-icon { font-size: 1rem; }
+
+    .info-banner {
+        background: linear-gradient(135deg, rgba(212,175,55,0.10), rgba(212,175,55,0.02));
+        border-left: 3px solid var(--accent);
+        padding: 0.85rem 1rem; border-radius: 8px;
+        font-size: 0.78rem; color: var(--ink);
+        margin-bottom: 1rem; line-height: 1.5;
+    }
+    .info-banner strong { color: var(--accent); }
+
+    .section {
+        background: var(--panel); border: 1px solid var(--border);
+        border-radius: var(--radius); margin-bottom: 1rem;
+        overflow: hidden;
+    }
+    .section-header {
+        padding: 0.9rem 1.1rem; cursor: pointer; user-select: none;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .section-header:active { background: var(--panel-2); }
+    .section-title {
+        font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.15em;
+        color: var(--ink-dim); font-weight: 700;
+    }
+    .section-title .badge {
+        display: inline-block; margin-left: 0.4rem; padding: 0.1rem 0.45rem;
+        background: var(--accent); color: #0a0a0a; border-radius: 10px;
+        font-size: 0.6rem; letter-spacing: 0.05em; font-weight: 800;
+    }
+    .section-title .badge.soft { background: var(--info); color: #fff; }
+    .section-title .badge.hot { background: var(--error); color: #fff; }
+    .section-header .chevron {
+        font-size: 0.7rem; color: var(--ink-faint); transition: transform 0.2s;
+    }
+    .section.open .section-header .chevron { transform: rotate(180deg); }
+    .section-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+    .section.open .section-body { max-height: 6000px; }
+    .section-content { padding: 0 1.1rem 1.1rem; }
+
+    .api-panel {
+        background: var(--panel); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 1rem 1.2rem;
+        margin-bottom: 1rem; transition: border-color 0.3s;
+    }
+    .api-panel.ok { border-color: var(--accent); box-shadow: 0 0 20px rgba(212,175,55,0.15); }
+
+    .api-key-input {
+        width: 100%; padding: 0.85rem 1rem;
+        border-radius: 8px; border: 1px solid var(--border);
+        background: #050505; color: var(--ink);
+        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+        font-size: 0.85rem; margin-bottom: 0.6rem;
+    }
+    .api-key-input:focus { outline: none; border-color: var(--accent); }
+
+    .api-save-btn {
+        width: 100%; padding: 0.8rem 1.2rem;
+        border-radius: 8px; border: none;
+        background: linear-gradient(135deg, var(--accent), var(--accent-3));
+        color: #0a0a0a;
+        font-size: 0.85rem; font-weight: 800; font-family: inherit;
+        cursor: pointer; transition: opacity 0.2s, transform 0.1s;
+        margin-bottom: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .api-save-btn:active { transform: scale(0.98); }
+
+    .api-status-line {
+        font-size: 0.75rem; padding: 0.55rem 0.85rem;
+        border-radius: 6px; margin-bottom: 0.5rem;
+        display: flex; align-items: center; gap: 0.5rem;
+        background: var(--panel-2); color: var(--ink-dim);
+        transition: all 0.3s;
+    }
+    .api-status-line.ok {
+        background: rgba(74,222,128,0.12); color: var(--success); font-weight: 600;
+    }
+    .api-status-line .status-dot {
+        width: 8px; height: 8px; border-radius: 50%;
+        background: var(--ink-faint); flex-shrink: 0;
+        transition: background 0.3s;
+    }
+    .api-status-line.ok .status-dot { background: var(--success); }
+
+    .api-hint { font-size: 0.72rem; color: var(--ink-dim); margin-top: 0.4rem; }
+    .api-hint a { color: var(--accent-3); text-decoration: underline; }
+    .stat-line {
+        font-size: 0.72rem; color: var(--ink-dim); margin-top: 0.5rem;
+        padding: 0.4rem 0.6rem; background: var(--panel-2); border-radius: 6px;
+        display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.3rem;
+    }
+
+    .wake-status {
+        font-size: 0.72rem; padding: 0.5rem 0.7rem;
+        border-radius: 6px; margin-top: 0.4rem;
+        display: flex; justify-content: space-between; align-items: center;
+        background: rgba(96,165,250,0.10); color: var(--info);
+        flex-wrap: wrap; gap: 0.4rem;
+    }
+    .wake-status.active { background: rgba(74,222,128,0.12); color: var(--success); }
+    .wake-status.warn { background: rgba(251,191,36,0.12); color: var(--warn); }
+    .wake-status button {
+        background: transparent; border: 1px solid currentColor;
+        color: inherit; padding: 0.25rem 0.6rem; border-radius: 6px;
+        font-size: 0.68rem; cursor: pointer; font-family: inherit;
+    }
+    .wake-status button:active { opacity: 0.6; }
+
+    .upload-zone {
+        border: 2px dashed var(--border); border-radius: var(--radius);
+        padding: 2rem 1rem; text-align: center; cursor: pointer;
+        transition: border-color 0.2s, background 0.2s; margin-bottom: 1rem;
+        background: var(--panel);
+    }
+    .upload-zone:active { border-color: var(--accent); background: var(--panel-2); }
+    .upload-zone.loading { pointer-events: none; opacity: 0.6; }
+    .upload-zone input[type="file"] { display: none; }
+    .upload-icon { font-size: 2.2rem; margin-bottom: 0.6rem; opacity: 0.9; color: var(--accent); }
+    .upload-text { font-size: 0.95rem; color: var(--ink); margin-bottom: 0.2rem; font-weight: 700; letter-spacing: 0.05em; }
+    .upload-hint { font-size: 0.75rem; color: var(--ink-dim); }
+
+    .images-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        gap: 0.5rem; margin-bottom: 1rem;
+    }
+    .image-card {
+        position: relative; border-radius: 8px; overflow: hidden;
+        border: 1px solid var(--border); background: #000;
+        aspect-ratio: 9/16;
+    }
+    .image-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .image-card .remove-btn {
+        position: absolute; top: 4px; right: 4px;
+        background: rgba(0,0,0,0.75); color: #fff; border: none;
+        width: 22px; height: 22px; border-radius: 50%; font-size: 11px;
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        line-height: 1;
+    }
+    .image-card .order-badge {
+        position: absolute; bottom: 4px; left: 4px;
+        background: rgba(212,175,55,0.95); color: #0a0a0a;
+        padding: 0.15rem 0.45rem; border-radius: 10px;
+        font-size: 0.65rem; font-weight: 800;
+    }
+
+    .order-controls {
+        display: flex; gap: 0.4rem; margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+    .order-btn {
+        padding: 0.5rem 0.9rem; border-radius: 8px;
+        border: 1px solid var(--border); background: var(--panel-2);
+        color: var(--ink); font-size: 0.75rem; font-family: inherit;
+        cursor: pointer; font-weight: 700;
+    }
+    .order-btn:active { transform: scale(0.97); }
+    .order-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    textarea {
+        width: 100%; padding: 0.75rem 0.9rem; border-radius: 8px;
+        border: 1px solid var(--border); background: #050505;
+        color: var(--ink); font-family: inherit; font-size: 0.88rem;
+        min-height: 80px; resize: vertical;
+    }
+    textarea:focus { outline: none; border-color: var(--accent); }
+
+    .prompt-main {
+        width: 100%; padding: 0.85rem 1rem;
+        border-radius: 8px; border: 1px solid var(--border);
+        background: #050505; color: var(--ink);
+        font-family: inherit; font-size: 0.9rem;
+        min-height: 110px; resize: vertical; line-height: 1.5;
+    }
+    .prompt-main:focus { outline: none; border-color: var(--accent); }
+    .prompt-main-hint {
+        font-size: 0.72rem; color: var(--ink-dim);
+        margin-top: 0.5rem; line-height: 1.4;
+    }
+
+    .prompt-presets {
+        display: flex; flex-wrap: wrap; gap: 0.4rem;
+        margin-top: 0.7rem;
+    }
+    .prompt-preset {
+        padding: 0.35rem 0.75rem; border-radius: 16px;
+        border: 1px solid var(--border); background: var(--panel-2);
+        font-size: 0.72rem; cursor: pointer; color: var(--ink);
+        transition: all 0.15s; user-select: none; font-weight: 600;
+    }
+    .prompt-preset:active { transform: scale(0.96); }
+    .prompt-preset:hover { border-color: var(--accent); color: var(--accent); }
+
+    .categories-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 0.5rem;
+    }
+    .category-card {
+        padding: 0.8rem 0.5rem; border-radius: 10px;
+        border: 1px solid var(--border); background: var(--panel-2);
+        cursor: pointer; transition: all 0.15s;
+        display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
+        text-align: center;
+    }
+    .category-card:active { transform: scale(0.96); }
+    .category-card.selected {
+        background: linear-gradient(135deg, var(--accent), var(--accent-3));
+        color: #0a0a0a; border-color: var(--accent);
+        box-shadow: 0 0 20px rgba(212,175,55,0.35);
+    }
+    .category-card .cat-emoji { font-size: 1.6rem; }
+    .category-card .cat-name { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.02em; line-height: 1.15; }
+
+    .category-banner {
+        margin-top: 0.8rem; padding: 0.7rem 0.9rem;
+        border-radius: 8px; background: rgba(212,175,55,0.08);
+        border-left: 3px solid var(--accent);
+        font-size: 0.75rem; line-height: 1.4; color: var(--ink);
+    }
+    .category-banner strong { color: var(--accent); }
+
+    .styles-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+        gap: 0.5rem;
+    }
+    .style-card {
+        padding: 0.75rem 0.85rem; border-radius: 8px;
+        border: 1px solid var(--border); background: var(--panel-2);
+        cursor: pointer; transition: all 0.15s;
+        display: flex; align-items: center; gap: 0.5rem;
+    }
+    .style-card:active { transform: scale(0.98); }
+    .style-card.selected {
+        background: linear-gradient(135deg, var(--accent), var(--accent-3));
+        color: #0a0a0a; border-color: var(--accent);
+        box-shadow: 0 0 20px rgba(212,175,55,0.35);
+    }
+    .style-card .style-emoji { font-size: 1.2rem; flex-shrink: 0; }
+    .style-card .style-name { font-size: 0.8rem; font-weight: 700; line-height: 1.2; }
+    .style-card .style-desc { font-size: 0.65rem; opacity: 0.7; margin-top: 0.1rem; line-height: 1.2; }
+    .style-card.selected .style-desc { opacity: 0.85; }
+
+    .style-category-header {
+        grid-column: 1 / -1;
+        font-size: 0.7rem; font-weight: 800;
+        color: var(--accent-3); text-transform: uppercase;
+        letter-spacing: 0.15em;
+        padding: 0.7rem 0 0.3rem;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 0.3rem;
+    }
+    .style-category-header:first-child { padding-top: 0; border-bottom: none; }
+    .style-category-desc {
+        grid-column: 1 / -1;
+        font-size: 0.68rem; color: var(--ink-dim);
+        font-style: italic; margin-bottom: 0.4rem; line-height: 1.35;
+    }
+
+    .no-style-card {
+        grid-column: 1 / -1;
+        padding: 0.8rem 1rem;
+        border-radius: 8px;
+        border: 2px dashed var(--border);
+        background: transparent;
+        text-align: center; cursor: pointer;
+        transition: all 0.15s;
+        font-size: 0.82rem; color: var(--ink-dim);
+    }
+    .no-style-card:active { transform: scale(0.99); }
+    .no-style-card.selected {
+        border-color: var(--accent); border-style: solid;
+        background: var(--panel-2); color: var(--accent); font-weight: 700;
+    }
+
+    .control-row { margin-bottom: 0.9rem; }
+    .control-row:last-child { margin-bottom: 0; }
+    .control-label {
+        display: block; font-size: 0.7rem; color: var(--ink-dim);
+        margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.1em;
+        font-weight: 700;
+    }
+    select {
+        width: 100%; padding: 0.7rem 0.9rem; border-radius: 8px;
+        border: 1px solid var(--border); background: #050505;
+        color: var(--ink); font-family: inherit; font-size: 0.88rem;
+        -webkit-appearance: none; appearance: none;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%23d4af37' d='M0 0l5 6 5-6z'/></svg>");
+        background-repeat: no-repeat;
+        background-position: right 0.9rem center;
+        background-size: 10px;
+    }
+    select:focus { outline: none; border-color: var(--accent); }
+
+    .btn-primary {
+        width: 100%; padding: 1.1rem; border-radius: var(--radius);
+        border: none;
+        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-3) 100%);
+        color: #0a0a0a;
+        font-size: 0.95rem; font-weight: 800; font-family: inherit;
+        cursor: pointer; transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
+        margin-bottom: 1rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        box-shadow: 0 4px 24px rgba(212,175,55,0.3);
+    }
+    .btn-primary:active:not(:disabled) { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.25; cursor: not-allowed; box-shadow: none; }
+
+    .btn-stop {
+        width: 100%; padding: 0.8rem; border-radius: var(--radius);
+        border: 1px solid var(--error); background: transparent;
+        color: var(--error); font-size: 0.8rem; font-weight: 700;
+        font-family: inherit; cursor: pointer; margin-bottom: 1rem;
+        display: none; letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .btn-stop.visible { display: block; }
+
+    .g-download {
+        display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+        width: 100%; padding: 0.6rem 0.5rem;
+        background: linear-gradient(135deg, var(--success), #22c55e);
+        color: #0a0a0a; font-size: 0.72rem; font-weight: 800; font-family: inherit;
+        text-decoration: none; letter-spacing: 0.08em; text-transform: uppercase;
+        border: none; cursor: pointer;
+        transition: opacity 0.2s, transform 0.1s;
+    }
+    .g-download:active { transform: scale(0.98); opacity: 0.85; }
+
+    .queue { margin-top: 1rem; }
+    .queue-summary {
+        background: var(--panel); border: 1px solid var(--border);
+        border-radius: 8px; padding: 0.7rem 0.9rem; margin-bottom: 0.6rem;
+        font-size: 0.78rem; display: flex; justify-content: space-between;
+        align-items: center; flex-wrap: wrap; gap: 0.4rem;
+    }
+    .queue-summary .progress-text { color: var(--accent); font-weight: 700; }
+    .queue-summary .eta-text { color: var(--ink-dim); }
+
+    .queue-item {
+        display: flex; align-items: center; gap: 0.8rem;
+        padding: 0.7rem 0.8rem; border-radius: 8px;
+        border: 1px solid var(--border); margin-bottom: 0.4rem;
+        background: var(--panel); transition: border-color 0.3s, opacity 0.3s;
+        font-size: 0.82rem;
+    }
+    .queue-item.pending { opacity: 0.5; }
+    .queue-item.creating { border-color: var(--warn); }
+    .queue-item.processing { border-color: var(--accent); }
+    .queue-item.done { border-color: var(--success); }
+    .queue-item.failed { border-color: var(--error); }
+    .queue-item .q-icon { font-size: 1rem; width: 1.5rem; text-align: center; flex-shrink: 0; color: var(--accent); }
+    .queue-item .q-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .queue-item .q-status { font-size: 0.72rem; color: var(--ink-dim); text-align: right; flex-shrink: 0; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .queue-more {
+        text-align: center; padding: 0.5rem; color: var(--ink-dim);
+        font-size: 0.75rem; font-style: italic;
+    }
+
+    .gallery { margin-top: 1.5rem; }
+    .gallery-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 0.8rem;
+    }
+    .gallery-item {
+        border-radius: var(--radius); overflow: hidden;
+        border: 1px solid var(--accent); background: #000;
+        animation: fadeIn 0.4s ease;
+        box-shadow: 0 4px 20px rgba(212,175,55,0.2);
+    }
+    .gallery-item video { width: 100%; display: block; aspect-ratio: 9/16; object-fit: cover; }
+    .gallery-item .g-caption {
+        padding: 0.4rem 0.6rem; background: var(--panel);
+        font-size: 0.7rem; color: var(--accent);
+        font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+
+    .status-bar {
+        position: fixed; bottom: 0; left: 0; right: 0;
+        background: linear-gradient(135deg, #141414, #0a0a0a);
+        color: var(--ink); padding: 0.7rem 1rem;
+        font-size: 0.78rem; display: flex; align-items: center; gap: 0.6rem;
+        transform: translateY(100%); transition: transform 0.3s;
+        z-index: 100;
+        border-top: 1px solid var(--accent);
+    }
+    .status-bar.visible { transform: translateY(0); }
+    .status-bar .spinner {
+        width: 12px; height: 12px; border: 2px solid rgba(212,175,55,0.3);
+        border-top-color: var(--accent); border-radius: 50%;
+        animation: spin 0.8s linear infinite; flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .hidden { display: none !important; }
+
+    #noSleepCanvas { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0.01; pointer-events: none; z-index: -1; }
+    #noSleepVideo { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0.01; pointer-events: none; z-index: -1; }
+
+    #debugLog {
+        margin-top: 1.5rem;
+        background: #1a0f0f;
+        border: 1px solid #5a2020;
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-size: 0.72rem;
+        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+        color: #ff8a8a;
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-height: 340px;
+        overflow-y: auto;
+        display: none;
+    }
+    #debugLog .entry { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #3a1a1a; }
+    #debugLog .entry:last-child { border-bottom: none; }
+    #debugLogHint { font-size: 0.72rem; color: var(--ink-dim); margin-top: 0.6rem; display: none; }
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Studio Mode</h1>
+    <p class="subtitle">Vos vêtements en mouvement</p>
+</header>
+
+<div class="info-banner">
+    <strong>Concept :</strong> Déposez vos photos de vêtements (sur mannequin, à plat, packshot, porté). Choisissez la <strong>catégorie</strong> du produit, puis la <strong>collection</strong>. L'IA anime chaque image avec un mouvement de mode subtil — tissu qui bouge, mannequin qui tourne, détail couture mis en valeur. Idéal pour <strong>e-commerce, lookbook, catalogue, Instagram</strong>. Format <strong>portrait 9:16</strong>.
+</div>
+
+<div class="api-panel" id="api-panel">
+    <input type="password" class="api-key-input" id="api-key-input"
+           placeholder="Collez votre clé API ici (sk-...)" autocomplete="off" spellcheck="false">
+    <button type="button" class="api-save-btn" id="api-save-btn">Enregistrer la clé</button>
+    <div class="api-status-line" id="api-status-line">
+        <span class="status-dot"></span>
+        <span id="api-status-text">Aucune clé API enregistrée</span>
+    </div>
+    <div class="api-hint">
+        Clé gratuite sur <a href="https://platform.agnes-ai.com" target="_blank">platform.agnes-ai.com</a> → Settings → API Keys
+    </div>
+    <div class="stat-line" id="stat-line">
+        <span>📊 Vitesse moyenne : <span id="stat-speed">en attente de données</span></span>
+        <span id="stat-samples">0 génération</span>
+    </div>
+    <div class="wake-status" id="wake-status">
+        <span id="wake-status-text">💤 Veille automatique</span>
+        <button type="button" id="wake-toggle-btn">Garder l'écran allumé</button>
+    </div>
+</div>
+
+<div class="upload-zone" id="upload-zone">
+    <input type="file" id="file-input" accept="image/*" multiple>
+    <div class="upload-icon">👔</div>
+    <div class="upload-text">Ajoutez vos pièces</div>
+    <div class="upload-hint">Mannequin, packshot, porté, détail — chacune devient une scène</div>
+</div>
+
+<div class="images-grid" id="images-grid"></div>
+
+<div class="order-controls" id="order-controls" style="display:none;">
+    <button type="button" class="order-btn" id="shuffle-btn">🔀 Mélanger</button>
+    <button type="button" class="order-btn" id="reverse-btn">↩️ Inverser</button>
+    <button type="button" class="order-btn" id="sort-name-btn">🔤 Trier par nom</button>
+</div>
+
+<div class="section open" id="section-category">
+    <div class="section-header" data-toggle="section-category">
+        <span class="section-title">👗 Catégorie de produit <span class="badge hot">essentiel</span></span>
+        <span class="chevron">▼</span>
+    </div>
+    <div class="section-body">
+        <div class="section-content">
+            <div class="categories-grid" id="categories-grid"></div>
+            <div class="category-banner" id="category-banner" style="display:none;"></div>
+            <label class="control-label" style="margin-top:1rem;">Description exacte du produit (recommandé)</label>
+            <textarea id="product-desc" placeholder="Ex : mocassin de conduite en cuir, bleu / blanc / rouge, semelle dorée à plots, laçage rouge latéral, plaque logo dorée sur l'empeigne, AUCUN lacet frontal."></textarea>
+        </div>
+    </div>
+</div>
+
+<div class="section open" id="section-prompt">
+    <div class="section-header" data-toggle="section-prompt">
+        <span class="section-title">✍️ Direction artistique <span class="badge soft">recommandé</span></span>
+        <span class="chevron">▼</span>
+    </div>
+    <div class="section-body">
+        <div class="section-content">
+            <textarea class="prompt-main" id="main-prompt"
+                placeholder="Décrivez la direction artistique de votre catalogue. Par exemple :
+
+« Chaque vêtement doit être mis en valeur comme dans un défilé de mode. Le tissu bouge subtilement comme s'il y avait une brise légère. La lumière est celle d'un studio professionnel, douce et flatteuse. Gardez chaque vêtement exactement identique à la photo originale : même couleur, même coupe, même matière. »"></textarea>
+            <div class="prompt-presets" id="prompt-presets"></div>
+            <div class="prompt-main-hint">
+                💡 Ce prompt s'applique à <strong>toutes</strong> vos pièces. La catégorie et le type de collection enrichissent automatiquement ce prompt.
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="section" id="section-style">
+    <div class="section-header" data-toggle="section-style">
+        <span class="section-title">🎨 Type de collection <span class="badge">optionnel</span></span>
+        <span class="chevron">▼</span>
+    </div>
+    <div class="section-body">
+        <div class="section-content">
+            <div class="styles-grid" id="styles-grid"></div>
+        </div>
+    </div>
+</div>
+
+<div class="section" id="section-tech">
+    <div class="section-header" data-toggle="section-tech">
+        <span class="section-title">📷 Réglages du shooting</span>
+        <span class="chevron">▼</span>
+    </div>
+    <div class="section-body">
+        <div class="section-content">
+            <div class="control-row">
+                <label class="control-label">Durée de chaque plan</label>
+                <select id="duration-select">
+                    <option value="121">5 secondes</option>
+                    <option value="153" selected>6,4 secondes (recommandé)</option>
+                    <option value="241">10 secondes</option>
+                </select>
+            </div>
+            <div class="control-row">
+                <label class="control-label">Cadrage</label>
+                <select id="framing-select">
+                    <option value="random">Aléatoire</option>
+                    <option value="close">Détail (tissu, couture, accessoire)</option>
+                    <option value="medium">Buste (haut du vêtement)</option>
+                    <option value="wide">Pied (silhouette complète)</option>
+                </select>
+            </div>
+            <div class="control-row">
+                <label class="control-label">Rythme du défilé</label>
+                <select id="intensity-select">
+                    <option value="random">Aléatoire</option>
+                    <option value="slow">Lent et luxueux</option>
+                    <option value="moderate" selected>Fluide et naturel</option>
+                    <option value="dynamic">Dynamique et streetwear</option>
+                </select>
+            </div>
+            <div class="control-row">
+                <label class="control-label">Transitions entre les pièces</label>
+                <select id="transition-select">
+                    <option value="fade" selected>Fondu luxe</option>
+                    <option value="match">Match cut (raccord matière)</option>
+                    <option value="zoom">Zoom cut (détail → pièce)</option>
+                    <option value="flash">Flash studio</option>
+                    <option value="cross">Cross dissolve</option>
+                    <option value="whip">Whip pan défilé</option>
+                </select>
+            </div>
+            <div class="control-row">
+                <label class="control-label">Qualité (étapes d'inférence)</label>
+                <select id="steps-select">
+                    <option value="20">20 — Rapide</option>
+                    <option value="30" selected>30 — Équilibré (recommandé)</option>
+                    <option value="40">40 — Qualité maximale</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<button type="button" class="btn-primary" id="generate-btn" disabled>
+    Créer le catalogue vidéo
+</button>
+
+<button type="button" class="btn-stop" id="stop-btn">
+    ⏹ Arrêter la génération
+</button>
+
+<div class="queue" id="queue" style="display:none;"></div>
+
+<div class="gallery" id="gallery" style="display:none;">
+    <div class="section-title" style="margin-bottom:0.8rem;">🎬 Vidéos générées</div>
+    <div class="gallery-grid" id="gallery-grid"></div>
+</div>
+
+<div class="status-bar" id="status-bar">
+    <div class="spinner"></div>
+    <span id="status-text">Préparation…</span>
+</div>
+
+<div class="toast" id="toast">
+    <span class="toast-icon" id="toast-icon">✓</span>
+    <span id="toast-text">Message</span>
+</div>
+
+<canvas id="noSleepCanvas" width="2" height="2"></canvas>
+<video id="noSleepVideo" playsinline muted loop></video>
+
+<div id="debugLog"></div>
+<p class="hint" id="debugLogHint">👆 Journal de débogage (le plus récent en haut) — fais une capture d'écran de ceci</p>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// CONFIGURATION API
+// ══════════════════════════════════════════════════════════════════
+const API_BASE = 'https://apihub.agnes-ai.com/v1';
+const POLL_BASE = 'https://apihub.agnes-ai.com/agnesapi';
+const MODEL_VIDEO = 'agnes-video-v2.0';
+const FRAME_RATE = 24;
+
+let createIntervalMs = 62000;
+const CREATE_INTERVAL_MIN = 62000;
+const CREATE_INTERVAL_MAX = 90000;
+const CREATE_INTERVAL_SAFE = 75000;
+
+const POLL_INTERVAL_SEC = 8;
+const MAX_POLL_ATTEMPTS = 100;
+
+const TIMING_CACHE_KEY = 'studio_mode_timing_v1';
+const API_KEY_STORAGE = 'agnes_api_key';
+const WAKE_LOCK_PREF = 'studio_mode_wakelock';
+
+const RIGID_CATEGORIES = ['chaussures', 'bottes', 'sac', 'accessoire', 'bijou', 'lunettes', 'montre'];
+const MAX_VISIBLE_QUEUE = 30;
+const MAX_IMAGE_SIZE = 12 * 1024 * 1024;
+const THUMBNAIL_MAX_WIDTH = 200;
+
+// ══════════════════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════════════════
+let toastTimeout = null;
+function showToast(message, type = 'success', duration = 2500) {
+    const toast = document.getElementById('toast');
+    const icon = document.getElementById('toast-icon');
+    const text = document.getElementById('toast-text');
+    if (!toast || !icon || !text) return;
+    toast.classList.remove('visible', 'success', 'error', 'warn');
+    void toast.offsetWidth;
+    const icons = { success: '✓', error: '✕', warn: '⚠' };
+    icon.textContent = icons[type] || '✓';
+    text.textContent = message;
+    toast.classList.add(type);
+    requestAnimationFrame(() => toast.classList.add('visible'));
+    if (toastTimeout) clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => toast.classList.remove('visible'), duration);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ANTI-VEILLE
+// ══════════════════════════════════════════════════════════════════
+let wakeLockSentinel = null;
+let wakeLockEnabled = false;
+let canvasStream = null;
+let canvasInterval = null;
+
+function isWakeLockSupported() {
+    return 'wakeLock' in navigator && typeof navigator.wakeLock.request === 'function';
+}
+
+async function requestWakeLockAPI() {
+    if (!isWakeLockSupported()) return false;
+    try {
+        wakeLockSentinel = await navigator.wakeLock.request('screen');
+        wakeLockSentinel.addEventListener('release', () => {
+            wakeLockSentinel = null;
+            updateWakeStatus();
+        });
+        return true;
+    } catch (e) { return false; }
+}
+
+async function releaseWakeLockAPI() {
+    if (wakeLockSentinel) {
+        try { await wakeLockSentinel.release(); } catch (e) {}
+        wakeLockSentinel = null;
+    }
+}
+
+function startCanvasStream() {
+    if (canvasStream) return true;
+    try {
+        const canvas = document.getElementById('noSleepCanvas');
+        const video = document.getElementById('noSleepVideo');
+        if (!canvas || !video) return false;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return false;
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (typeof canvas.captureStream !== 'function') return false;
+        canvasStream = canvas.captureStream(1);
+        let toggle = false;
+        canvasInterval = setInterval(() => {
+            toggle = !toggle;
+            ctx.fillStyle = toggle ? '#000000' : '#010101';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }, 1000);
+        video.srcObject = canvasStream;
+        video.muted = true;
+        video.playsInline = true;
+        const playPromise = video.play();
+        if (playPromise && playPromise.catch) playPromise.catch(e => {});
+        return true;
+    } catch (e) { return false; }
+}
+
+function stopCanvasStream() {
+    if (canvasInterval) { clearInterval(canvasInterval); canvasInterval = null; }
+    const video = document.getElementById('noSleepVideo');
+    if (video) { try { video.pause(); video.srcObject = null; } catch (e) {} }
+    if (canvasStream) {
+        try { canvasStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+        canvasStream = null;
+    }
+}
+
+async function activateWakeLock() {
+    let success = false;
+    if (isWakeLockSupported()) success = await requestWakeLockAPI();
+    if (!success) success = startCanvasStream();
+    if (!success && !canvasStream) success = startCanvasStream();
+    return success;
+}
+
+async function deactivateWakeLock() {
+    await releaseWakeLockAPI();
+    stopCanvasStream();
+}
+
+function updateWakeStatus() {
+    const el = document.getElementById('wake-status');
+    const txt = document.getElementById('wake-status-text');
+    const btn = document.getElementById('wake-toggle-btn');
+    if (!el || !txt || !btn) return;
+    el.classList.remove('active', 'warn');
+    const hasAnyMechanism = isWakeLockSupported() || (document.getElementById('noSleepCanvas')?.captureStream);
+    if (!hasAnyMechanism) {
+        el.classList.add('warn');
+        txt.textContent = '⚠️ Non supporté par ce navigateur';
+        btn.style.display = 'none';
+        return;
+    }
+    btn.style.display = 'inline-block';
+    const isActive = wakeLockSentinel !== null || canvasStream !== null;
+    if (wakeLockEnabled && isActive) {
+        el.classList.add('active');
+        txt.textContent = '✅ L\'écran reste allumé';
+        btn.textContent = 'Désactiver';
+    } else if (wakeLockEnabled && !isActive) {
+        el.classList.add('warn');
+        txt.textContent = '⏳ En attente (touchez la page)';
+        btn.textContent = 'Désactiver';
+    } else {
+        txt.textContent = '💤 Veille automatique';
+        btn.textContent = 'Garder l\'écran allumé';
+    }
+}
+
+async function toggleWakeLock() {
+    if (wakeLockEnabled) {
+        wakeLockEnabled = false;
+        await deactivateWakeLock();
+        try { localStorage.setItem(WAKE_LOCK_PREF, '0'); } catch (e) {}
+        showToast('Veille automatique réactivée', 'warn');
+    } else {
+        wakeLockEnabled = true;
+        const ok = await activateWakeLock();
+        try { localStorage.setItem(WAKE_LOCK_PREF, '1'); } catch (e) {}
+        if (ok) showToast('L\'écran va rester allumé', 'success');
+        else showToast('Activez manuellement dans les réglages', 'warn');
+    }
+    updateWakeStatus();
+}
+
+document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState === 'visible' && wakeLockEnabled) {
+        await activateWakeLock();
+        updateWakeStatus();
+    }
+});
+
+async function ensureWakeLockActive() {
+    if (!wakeLockEnabled) return;
+    if (wakeLockSentinel === null && canvasStream === null) {
+        await activateWakeLock();
+        updateWakeStatus();
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// CACHE DES TEMPS
+// ══════════════════════════════════════════════════════════════════
+function loadTimingCache() {
+    try { return JSON.parse(localStorage.getItem(TIMING_CACHE_KEY) || '{}'); }
+    catch (e) { return {}; }
+}
+function saveTimingCache(cache) {
+    try { localStorage.setItem(TIMING_CACHE_KEY, JSON.stringify(cache)); } catch (e) {}
+}
+function recordGenerationTime(numFrames, durationMs) {
+    const cache = loadTimingCache();
+    const key = String(numFrames);
+    if (!cache[key]) cache[key] = [];
+    cache[key].push(durationMs);
+    if (cache[key].length > 10) cache[key] = cache[key].slice(-10);
+    saveTimingCache(cache);
+    updateTimingDisplay();
+}
+function estimateGenerationTime(numFrames) {
+    const cache = loadTimingCache();
+    const samples = cache[String(numFrames)];
+    if (samples && samples.length > 0) {
+        const sorted = [...samples].sort((a, b) => a - b);
+        const mid = Math.floor(sorted.length / 2);
+        return sorted.length % 2 === 0 ? (sorted[mid-1] + sorted[mid]) / 2 : sorted[mid];
+    }
+    return 30000 + numFrames * 500;
+}
+function updateTimingDisplay() {
+    const cache = loadTimingCache();
+    const all = Object.values(cache).flat();
+    const speedEl = document.getElementById('stat-speed');
+    const samplesEl = document.getElementById('stat-samples');
+    if (!speedEl || !samplesEl) return;
+    if (all.length === 0) {
+        speedEl.textContent = 'en attente de données';
+        samplesEl.textContent = '0 génération';
+        return;
+    }
+    const avg = all.reduce((a, b) => a + b, 0) / all.length;
+    speedEl.textContent = (avg / 1000).toFixed(1) + ' s en moyenne';
+    samplesEl.textContent = all.length + ' génération' + (all.length > 1 ? 's' : '');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// CATÉGORIES DE PRODUITS
+// ══════════════════════════════════════════════════════════════════
+const CATEGORIES = [
+    { id: 'tshirt', name: 'T-shirt', emoji: '👕',
+      prompt: 'Focus on a t-shirt / tee garment. Emphasize the cotton fabric movement, the collar, the sleeves, the drape of the fabric. Show how the fabric folds and breathes.',
+      defaultFraming: 'medium',
+      preset: 'Un t-shirt qui respire doucement. Le coton bouge légèrement comme s\'il était porté par une brise. Le col et les manches restent nets et bien visibles. La lumière est douce et met en valeur la matière.' },
+    { id: 'chemise', name: 'Chemise', emoji: '👔',
+      prompt: 'Focus on a shirt / button-up garment. Emphasize the buttons, the collar, the cuffs, the placket, the fabric weave. Show the crisp tailored lines.',
+      defaultFraming: 'medium',
+      preset: 'Une chemise élégante qui bouge subtilement. Le tissu se froisse doucement comme dans un mouvement naturel. Les boutons, le col et les poignets restent parfaitement nets et reconnaissables.' },
+    { id: 'pull', name: 'Pull / Sweat', emoji: '🧶',
+      prompt: 'Focus on a sweater / knit garment. Emphasize the knit texture, the wool fibers, the ribbing at cuffs and hem, the cozy warm feel.',
+      defaultFraming: 'medium',
+      preset: 'Un pull douillet qui prend vie. La maille se soulève légèrement, les fibres de laine sont visibles et caressées par la lumière. Les côtes aux poignets et à la taille restent nettes.' },
+    { id: 'veste', name: 'Veste / Blazer', emoji: '🧥',
+      prompt: 'Focus on a jacket / blazer / coat garment. Emphasize the lapels, the structured shoulders, the buttons, the tailored lines, the movement of the fabric.',
+      defaultFraming: 'wide',
+      preset: 'Une veste structurée qui bouge comme dans un défilé. Les revers se soulèvent subtilement, les épaules restent nettes et bien dessinées. Le tissu ondule légèrement.' },
+    { id: 'manteau', name: 'Manteau', emoji: '🧥',
+      prompt: 'Focus on a long coat / overcoat. Emphasize the length, the drape, the belt if any, the collar, the sweeping movement of the fabric.',
+      defaultFraming: 'wide',
+      preset: 'Un manteau long qui se balance lentement. Le tissu flotte comme dans un mouvement gracieux, la longueur est mise en valeur. Le col et la ceinture restent nets.' },
+    { id: 'robe', name: 'Robe', emoji: '👗',
+      prompt: 'Focus on a dress. Emphasize the silhouette, the flow of the fabric, the hem, the waistline, the elegant draping. Show the dress as it would move on a catwalk.',
+      defaultFraming: 'wide',
+      preset: 'Une robe fluide qui ondule comme sur un podium. Le tissu flotte gracieusement, l\'ourlet se soulève légèrement, la silhouette est mise en valeur. Le mouvement est lent et élégant.' },
+    { id: 'jupe', name: 'Jupe', emoji: '👚',
+      prompt: 'Focus on a skirt. Emphasize the hem movement, the pleats or folds, the waistband, the flow of the fabric. Show how it swishes gently.',
+      defaultFraming: 'wide',
+      preset: 'Une jupe qui tournoie doucement. Les plis ou les volants bougent avec grâce, l\'ourlet ondule légèrement, la taille reste nette. Le mouvement est fluide et élégant.' },
+    { id: 'pantalon', name: 'Pantalon', emoji: '👖',
+      prompt: 'Focus on trousers / pants. Emphasize the cut, the creases, the drape of the fabric, the waistband, the hems at the ankles.',
+      defaultFraming: 'wide',
+      preset: 'Un pantalon bien coupé qui bouge légèrement. Les plis du tissu s\'animent doucement, la coupe est mise en valeur. Les ourlets et la taille restent nets.' },
+    { id: 'short', name: 'Short', emoji: '🩳',
+      prompt: 'Focus on a pair of shorts. Emphasize the cut, the hem line, the waistband, the fabric. Light casual movement.',
+      defaultFraming: 'wide',
+      preset: 'Un short léger qui bouge doucement. Le tissu s\'anime avec naturel, la coupe est mise en valeur. Les ourlets restent parfaitement nets.' },
+    { id: 'maillot', name: 'Maillot de bain', emoji: '🩱',
+      prompt: 'Focus on swimwear / bathing suit. Emphasize the swimsuit fabric, the cut, the straps, the way the fabric clings and moves slightly. Light water droplets or glistening fabric are welcome.',
+      defaultFraming: 'medium',
+      preset: 'Un maillot qui scintille doucement. Le tissu technique capte la lumière, les bretelles et la coupe restent parfaitement nets. Le mouvement est fluide comme si la personne sortait de l\'eau.' },
+    { id: 'lingerie', name: 'Lingerie', emoji: '🩰',
+      prompt: 'Focus on lingerie / intimate apparel. Emphasize the delicate lace, the fine straps, the elegant cut, the fabric softness. Refined and elegant presentation.',
+      defaultFraming: 'close',
+      preset: 'Une lingerie délicate qui bouge à peine. La dentelle et les fines bretelles restent parfaitement nettes. La lumière est douce et met en valeur le raffinement des détails.' },
+    { id: 'chaussures', name: 'Soulier', emoji: '👟',
+      prompt: 'Focus on the pair of shoes exactly as shown in the source image. Emphasize the leather texture, the stitching, the shape and the sole as they appear. Do NOT add laces, studs, spikes, buckles or any element that is not visible in the source image.',
+      defaultFraming: 'close',
+      preset: 'Une paire de souliers parfaitement mise en valeur. Les lacets, la semelle et les coutures restent nets. La lumière révèle la matière du cuir ou du textile.' },
+    { id: 'bottes', name: 'Bottes', emoji: '🥾',
+      prompt: 'Focus on the boots exactly as shown in the source image. Emphasize the leather, the sole and the shape as they appear. Do NOT add laces, buckles or any element that is not visible in the source image.',
+      defaultFraming: 'close',
+      preset: 'Des bottes élégantes qui restent parfaitement nettes. Le cuir capte la lumière, la semelle et les détails restent visibles. Le mouvement est très subtil.' },
+    { id: 'sac', name: 'Sac / Sac à main', emoji: '👜',
+      prompt: 'Focus on a handbag / bag. Emphasize the hardware, the handles, the leather, the stitching, the shape.',
+      defaultFraming: 'close',
+      preset: 'Un sac élégant qui bouge à peine. Les fermetures, les poignées et les coutures restent nets. La lumière met en valeur la matière noble du cuir.' },
+    { id: 'accessoire', name: 'Accessoire', emoji: '🧣',
+      prompt: 'Focus on a fashion accessory — scarf, belt, hat, gloves, jewelry. Emphasize the details and material.',
+      defaultFraming: 'close',
+      preset: 'Un accessoire de mode mis en valeur. Les détails, la matière et les finitions restent nets. La lumière est douce et met en valeur le raffinement.' },
+    { id: 'bijou', name: 'Bijou', emoji: '💎',
+      prompt: 'Focus on jewelry — necklace, earrings, ring, bracelet. Emphasize the sparkle, the metal, the gemstones, the shine. Close-up detail shot.',
+      defaultFraming: 'close',
+      preset: 'Un bijou précieux qui scintille doucement. Le métal et les pierres captent la lumière, les détails restent parfaitement nets. Le mouvement est très subtil pour ne pas déformer.' },
+    { id: 'lunettes', name: 'Lunettes', emoji: '🕶️',
+      prompt: 'Focus on sunglasses or eyeglasses. Emphasize the frames, the lenses, the reflections, the shape.',
+      defaultFraming: 'close',
+      preset: 'Des lunettes élégantes qui captent la lumière. Les montures et les verres restent parfaitement nets. Un léger reflet traverse le verre, mais la forme reste identique.' },
+    { id: 'montre', name: 'Montre', emoji: '⌚',
+      prompt: 'Focus on a watch. Emphasize the dial, the straps, the hardware, the reflection on the glass. Close-up product shot.',
+      defaultFraming: 'close',
+      preset: 'Une montre élégante qui capte la lumière. Le cadran, le bracelet et les détails restent parfaitement nets. Un léger reflet traverse le verre, mais la forme reste identique.' },
+    { id: 'uniforme', name: 'Uniforme / Sport', emoji: '🥋',
+      prompt: 'Focus on sportswear / athletic uniform / jersey. Emphasize the technical fabric, the logos, the fit, the performance cut.',
+      defaultFraming: 'medium',
+      preset: 'Une tenue de sport qui bouge avec énergie. Le tissu technique capte la lumière, les logos et les détails restent nets. Le mouvement est dynamique et fluide.' },
+    { id: 'costume', name: 'Costume', emoji: '🤵',
+      prompt: 'Focus on a suit — jacket and trousers. Emphasize the tailored cut, the lapels, the buttons, the fabric weave, the sharp lines.',
+      defaultFraming: 'wide',
+      preset: 'Un costume bien coupé qui bouge avec élégance. Les revers et les lignes structurées restent nets. Le tissu ondule légèrement comme lors d\'un défilé.' },
+    { id: 'ensemble', name: 'Ensemble / Combinaison', emoji: '🧵',
+      prompt: 'Focus on a matching outfit / set / jumpsuit. Emphasize the coordination of the pieces, the silhouette, the fabric flow.',
+      defaultFraming: 'wide',
+      preset: 'Un ensemble coordonné qui prend vie. Les deux pièces bougent en harmonie, la silhouette est mise en valeur. Le tissu flotte gracieusement.' },
+    { id: 'autre', name: 'Autre', emoji: '🏷️',
+      prompt: 'Focus on the clothing item shown in the image. Emphasize its fabric, cut, details and movement.',
+      defaultFraming: 'medium',
+      preset: 'Ce vêtement prend vie doucement. Le tissu bouge légèrement, les détails restent nets, la lumière met en valeur la pièce.' }
+];
+
+// ══════════════════════════════════════════════════════════════════
+// PRESETS DE PROMPT GÉNÉRIQUES
+// ══════════════════════════════════════════════════════════════════
+const PROMPT_PRESETS = [
+    { label: '👑 Défilé luxe',
+      text: 'Chaque pièce est mise en valeur comme dans un défilé de mode haute couture. Le tissu bouge avec grâce et lenteur, la lumière est celle d\'un podium de luxe. Gardez chaque vêtement exactement identique à la photo : même couleur, même coupe, même matière, mêmes détails.' },
+    { label: '🏬 E-commerce',
+      text: 'Chaque pièce est présentée comme pour un site e-commerce haut de gamme. Mouvement très subtil, mise en valeur de la matière et des détails. La lumière est neutre et professionnelle. Gardez chaque vêtement exactement identique à la photo originale.' },
+    { label: '📸 Lookbook',
+      text: 'Chaque image s\'anime comme une page de lookbook éditorial. Mouvement fluide et naturel, ambiance mode contemporaine, lumière douce et flatteuse. Gardez chaque pièce exactement identique.' },
+    { label: '✨ Instagram',
+      text: 'Chaque image s\'anime avec un style Instagram captivant. Mouvement doux et élégant, lumière chaleureuse, mise en valeur de la matière. Format vertical optimisé pour les réseaux sociaux.' },
+    { label: '🌬️ Brise légère',
+      text: 'Un vent léger fait bouger chaque pièce avec naturel. Le tissu ondule doucement, les plis se forment et se défont. Gardez chaque vêtement exactement identique à la photo originale.' },
+    { label: '📦 Catalogue',
+      text: 'Chaque image s\'anime comme une page de catalogue professionnel. Mouvement discret, mise en valeur de la coupe et de la matière. Fond neutre, lumière constante. Gardez chaque pièce identique.' }
+];
+
+// ══════════════════════════════════════════════════════════════════
+// TYPES DE COLLECTION
+// ══════════════════════════════════════════════════════════════════
+const COLLECTION_THEMES = [
+    { id: 'catwalk', name: 'Défilé', emoji: '👑', desc: 'Podium, luxe, élégance',
+      prompt: 'high fashion runway presentation, elegant confident movement, glamorous runway lighting, luxury couture atmosphere, sophisticated. Preserve the exact garment colors, cut, fabric, and details.' },
+    { id: 'ecommerce', name: 'E-commerce', emoji: '🏬', desc: 'Propre, pro, neutre',
+      prompt: 'clean e-commerce product video, neutral white or light gray background, even professional lighting, subtle rotation or zoom, high-end catalog aesthetic. Preserve the exact garment.' },
+    { id: 'lookbook', name: 'Lookbook', emoji: '📸', desc: 'Éditorial, mode, magazine',
+      prompt: 'fashion editorial lookbook, stylish contemporary mood, soft flattering light, magazine-quality framing, aspirational. Preserve the exact garment.' },
+    { id: 'streetwear', name: 'Streetwear', emoji: '🧢', desc: 'Urbain, dynamique, cool',
+      prompt: 'urban streetwear aesthetic, dynamic youthful energy, city environment vibe, vibrant but cool atmosphere, modern hip-hop culture. Preserve the exact garment.' },
+    { id: 'luxe', name: 'Luxe / Haute couture', emoji: '💎', desc: 'Raffiné, précieux, doré',
+      prompt: 'luxury haute couture presentation, refined gold and black tones, opulent warm lighting, precious elegant atmosphere, high-end fashion house aesthetic. Preserve the exact garment.' },
+    { id: 'sport', name: 'Sport', emoji: '⚡', desc: 'Performance, énergie',
+      prompt: 'athletic performance apparel, dynamic energetic movement, modern gym or running environment, vibrant sporty lighting, performance aesthetic. Preserve the exact garment.' },
+    { id: 'vintage', name: 'Vintage / Rétro', emoji: '📽️', desc: 'Nostalgie, grain, chaleur',
+      prompt: 'vintage fashion aesthetic, warm nostalgic color grading, subtle film grain, retro 70s or 80s mood, timeless classic feel. Preserve the exact garment.' },
+    { id: 'minimal', name: 'Minimaliste', emoji: '⬜', desc: 'Épuré, zen, silencieux',
+      prompt: 'minimalist fashion presentation, clean neutral palette, extremely subtle movements, meditative calm atmosphere, contemporary design aesthetic. Preserve the exact garment.' },
+    { id: 'beach', name: 'Plage / Été', emoji: '🏖️', desc: 'Soleil, sable, vacances',
+      prompt: 'summer beach fashion, warm sunlit atmosphere, gentle sea breeze effect on fabric, golden sand and turquoise sea backdrop, relaxed vacation mood. Preserve the exact garment.' },
+    { id: 'paris', name: 'Parisien', emoji: '🗼', desc: 'Chic, romantique, français',
+      prompt: 'Parisian chic fashion aesthetic, romantic soft light, elegant Haussmann architecture backdrop, timeless French style, sophisticated charm. Preserve the exact garment.' },
+    { id: 'milan', name: 'Milan / Italien', emoji: '🇮🇹', desc: 'Élégance, cuir, italien',
+      prompt: 'Italian fashion elegance, warm Mediterranean light, sophisticated Milanese aesthetic, refined luxury, confident sensuality. Preserve the exact garment.' },
+    { id: 'nature', name: 'Nature / Organique', emoji: '🌿', desc: 'Fibres naturelles, écologie',
+      prompt: 'natural organic fashion aesthetic, soft daylight through leaves, eco-conscious sustainable atmosphere, gentle earth tones, artisanal feel. Preserve the exact garment.' },
+    { id: 'noir', name: 'Noir & Blanc', emoji: '⚫', desc: 'Monochrome, contraste',
+      prompt: 'black and white fashion editorial, high contrast monochrome, dramatic refined atmosphere, timeless elegance, sculptural play of light and shadow. Preserve the exact garment shape.' },
+    { id: 'glam', name: 'Glamour', emoji: '✨', desc: 'Paillettes, strass, soirée',
+      prompt: 'glamorous evening fashion, sparkling sequin-friendly lighting, luxurious party atmosphere, high-society elegance, red-carpet feel. Preserve the exact garment.' },
+    { id: 'boheme', name: 'Bohème', emoji: '🌸', desc: 'Libre, fleurs, artisan',
+      prompt: 'bohemian fashion aesthetic, free-spirited atmosphere, wildflowers and flowing fabric, warm rustic light, artisanal handcrafted feel. Preserve the exact garment.' },
+    { id: 'hiphop', name: 'Hip-Hop / Urbain', emoji: '🎤', desc: 'Rue, attitude, or',
+      prompt: 'hip-hop urban fashion, bold confident attitude, neon or gold-lit city environment, street culture energy, modern music video aesthetic. Preserve the exact garment.' },
+    { id: 'athleisure', name: 'Athleisure', emoji: '🏃', desc: 'Sport chic, confort',
+      prompt: 'athleisure fashion aesthetic, comfortable yet stylish, soft modern light, casual luxury, everyday athletic chic. Preserve the exact garment.' },
+    { id: 'runway-night', name: 'Nuit de défilé', emoji: '🌃', desc: 'Lumières, caméras, prestige',
+      prompt: 'fashion week night runway, glitzy lighting, paparazzi flashbulbs, prestigious red-carpet atmosphere, star-studded elegance. Preserve the exact garment.' }
+];
+
+// ══════════════════════════════════════════════════════════════════
+// TRANSITIONS
+// ══════════════════════════════════════════════════════════════════
+const TRANSITION_PROMPTS = {
+    fade: 'Each scene ends with a smooth luxury fade to black, then the next scene fades in from black',
+    match: 'Each scene cuts on a visual match — a shape, color, or fabric texture that connects the two garments',
+    zoom: 'Each scene zooms in rapidly toward a detail, then cuts to the next garment',
+    flash: 'Each scene ends with a bright studio flash, then the next garment appears',
+    cross: 'Each scene cross-dissolves smoothly into the next, overlapping for a moment',
+    whip: 'Each scene ends with a fast runway whip pan, then the next garment appears'
+};
+
+// ══════════════════════════════════════════════════════════════════
+// MOUVEMENTS (spécifiques mode)
+// ══════════════════════════════════════════════════════════════════
+const RANDOM_ACTIONS = [
+    'the garment fabric moves very gently as if caressed by a soft breeze',
+    'the model slowly turns their body slightly, revealing the cut of the garment',
+    'the fabric ripples imperceptibly, showing its quality and drape',
+    'the hem of the garment sways gently as if in slow motion',
+    'the model shifts their weight subtly, bringing the silhouette to life',
+    'a single fold of the fabric moves, then settles back',
+    'the sleeve or strap moves slightly, as if touched by invisible air',
+    'the fabric catches a passing reflection of light, shimmering softly',
+    'the model tilts their chin slightly, presenting the garment better',
+    'the collar or neckline shifts very subtly, showing its shape',
+    'light travels across the fabric, revealing its texture',
+    'the garment breathes with the model, an almost imperceptible living movement'
+];
+
+const RANDOM_CAMERA = [
+    'slow dolly-in, camera gliding forward to emphasize the fabric detail',
+    'static locked-off frame, only the garment moves subtly',
+    'slow 360 orbit around the piece, revealing it from all angles',
+    'gentle handheld sway, intimate and editorial',
+    'slow pan across the garment, revealing details from side to side',
+    'subtle parallax movement emphasizing depth and fabric layering',
+    'camera slowly tilts down from collar to hem, revealing the full cut',
+    'rack focus from fabric texture to overall silhouette',
+    'very slow push-in toward a signature detail (button, seam, logo)',
+    'camera drifts backward slowly, revealing the full silhouette'
+];
+
+const RANDOM_LIGHTING = [
+    'soft even studio light, professional product photography',
+    'warm golden hour backlight, fashion editorial style',
+    'dramatic side lighting, emphasizing fabric folds and texture',
+    'soft diffused softbox light, luxurious and even',
+    'cinematic rim lighting outlining the silhouette',
+    'warm interior boutique lighting, inviting and premium',
+    'cool modern daylight studio, crisp and contemporary',
+    'highlight light tracing the fabric edges, emphasizing quality'
+];
+
+const INTENSITY_PRESETS = {
+    slow: 'very slow luxurious movement, barely perceptible motion, elegant and contemplative',
+    moderate: 'moderate fluid movement, natural and graceful, like a fashion model posing',
+    dynamic: 'dynamic energetic movement, lively and confident, modern runway walk energy'
+};
+
+const FRAMING_PRESETS = {
+    close: 'extreme close-up framing on the garment detail — fabric, stitching, hardware, or signature element',
+    medium: 'medium shot framing the model from waist up, emphasizing the top portion of the garment',
+    wide: 'full-length wide shot showing the complete silhouette of the garment and model'
+};
+
+// ══════════════════════════════════════════════════════════════════
+// ÉTAT GLOBAL
+// ══════════════════════════════════════════════════════════════════
+const state = {
+    images: [],
+    isRunning: false,
+    stopRequested: false,
+    queue: [],
+    completed: 0,
+    failed: 0,
+    category: 'tshirt',
+    selectedEffect: 'lookbook',
+    mainPrompt: '',
+    framing: 'random',
+    intensity: 'random',
+    durationFrames: 153,
+    transition: 'fade',
+    inferenceSteps: 30,
+    productDesc: '',
+    isLoadingImages: false,
+    creationAttemptsSinceLastError: 0
+};
+
+// ══════════════════════════════════════════════════════════════════
+// CLÉ API
+// ══════════════════════════════════════════════════════════════════
+function getApiKey() {
+    try { return (localStorage.getItem(API_KEY_STORAGE) || '').trim(); }
+    catch (e) { return ''; }
+}
+
+function saveApiKey() {
+    const input = document.getElementById('api-key-input');
+    if (!input) return;
+    const key = input.value.trim();
+    if (!key) {
+        try { localStorage.removeItem(API_KEY_STORAGE); } catch (e) {}
+        updateApiPanel();
+        showToast('Clé supprimée', 'warn');
+        return;
+    }
+    if (!key.startsWith('sk-')) {
+        if (!confirm('La clé ne commence pas par "sk-". La sauvegarder quand même ?')) return;
+    }
+    try {
+        localStorage.setItem(API_KEY_STORAGE, key);
+        updateApiPanel();
+        showToast('Clé API enregistrée ✓', 'success');
+        input.blur();
+    } catch (e) {
+        showToast('Erreur lors de la sauvegarde', 'error');
+    }
+}
+
+function updateApiPanel() {
+    const panel = document.getElementById('api-panel');
+    const input = document.getElementById('api-key-input');
+    const statusLine = document.getElementById('api-status-line');
+    const statusText = document.getElementById('api-status-text');
+    const key = getApiKey();
+    if (!panel || !input || !statusLine || !statusText) return;
+    if (key) {
+        panel.classList.add('ok');
+        statusLine.classList.add('ok');
+        statusText.textContent = 'Clé API active · ' + key.slice(0, 8) + '…' + key.slice(-4);
+        input.value = key;
+        input.placeholder = '';
+    } else {
+        panel.classList.remove('ok');
+        statusLine.classList.remove('ok');
+        statusText.textContent = 'Aucune clé API enregistrée';
+        input.value = '';
+        input.placeholder = 'Collez votre clé API ici (sk-...)';
+    }
+    updateGenerateBtn();
+}
+
+function updateGenerateBtn() {
+    const btn = document.getElementById('generate-btn');
+    if (!btn) return;
+    const hasImages = state.images.length > 0;
+    const hasKey = !!getApiKey();
+    btn.disabled = !hasImages || !hasKey || state.isRunning || state.isLoadingImages;
+    if (state.isLoadingImages) {
+        btn.textContent = 'Chargement des images… (' + state.images.length + ')';
+    } else if (state.isRunning) {
+        const total = state.queue.length;
+        const done = state.completed + state.failed;
+        btn.textContent = 'Création en cours… (' + done + '/' + total + ')';
+    } else if (!hasKey) {
+        btn.textContent = 'Ajoutez votre clé API';
+    } else if (!hasImages) {
+        btn.textContent = 'Ajoutez des images';
+    } else {
+        btn.textContent = 'Créer le catalogue (' + state.images.length + ' pièce' + (state.images.length > 1 ? 's' : '') + ')';
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// UTILITAIRES
+// ══════════════════════════════════════════════════════════════════
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function log(msg) { console.log('[Studio Mode] ' + msg); }
+function setStatus(text) {
+    const bar = document.getElementById('status-bar');
+    const txt = document.getElementById('status-text');
+    if (!bar || !txt) return;
+    if (text) { bar.classList.add('visible'); txt.textContent = text; }
+    else bar.classList.remove('visible');
+}
+function logError(label, err) {
+    const debugLogEl = document.getElementById('debugLog');
+    const hintEl = document.getElementById('debugLogHint');
+    if (!debugLogEl) return;
+    debugLogEl.style.display = 'block';
+    if (hintEl) hintEl.style.display = 'block';
+    const entry = document.createElement('div');
+    entry.className = 'entry';
+    const time = new Date().toLocaleTimeString();
+    const message = typeof err === 'string' ? err : (err && err.stack) || (err && err.message) || JSON.stringify(err);
+    const color = label === 'Info' ? '#8ab4ff' : '#ff5555';
+    entry.innerHTML = '<span style="color:' + color + ';font-weight:bold;">[' + time + '] ' + esc(label) + '</span>\n' + esc(message);
+    debugLogEl.prepend(entry);
+    while (debugLogEl.children.length > 40) debugLogEl.removeChild(debugLogEl.lastChild);
+}
+window.addEventListener('error', (event) => {
+    logError('Erreur JS globale', event.error || event.message);
+});
+window.addEventListener('unhandledrejection', (event) => {
+    logError('Promesse rejetée non gérée', event.reason);
+});
+
+function randomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+}
+function formatEta(seconds) {
+    if (seconds < 60) return Math.round(seconds) + 's';
+    const m = Math.floor(seconds / 60);
+    const s = Math.round(seconds % 60);
+    return m + 'm' + (s > 0 ? ' ' + s + 's' : '');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// IMAGES
+// ══════════════════════════════════════════════════════════════════
+function fileToDataUri(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = () => reject(new Error('Erreur lecture'));
+        reader.readAsDataURL(file);
+    });
+}
+
+function generateThumbnail(dataUri) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            try {
+                const canvas = document.createElement('canvas');
+                const ratio = img.height / img.width;
+                canvas.width = THUMBNAIL_MAX_WIDTH;
+                canvas.height = Math.round(THUMBNAIL_MAX_WIDTH * ratio);
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                resolve(canvas.toDataURL('image/jpeg', 0.7));
+            } catch (e) { resolve(dataUri); }
+        };
+        img.onerror = () => resolve(dataUri);
+        img.src = dataUri;
+    });
+}
+
+async function processOneFile(file) {
+    if (!file.type.startsWith('image/')) return null;
+    if (file.size > MAX_IMAGE_SIZE) { log('Trop lourd : ' + file.name); return null; }
+    try {
+        const dataUri = await fileToDataUri(file);
+        const thumbnail = await generateThumbnail(dataUri);
+        return { file, dataUri, thumbnail, name: file.name, id: Date.now() + Math.random() };
+    } catch (e) { log('Erreur : ' + e.message); return null; }
+}
+
+async function handleFiles(files) {
+    const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+    if (!imageFiles.length) return;
+    state.isLoadingImages = true;
+    updateGenerateBtn();
+    setStatus('Chargement de ' + imageFiles.length + ' image' + (imageFiles.length > 1 ? 's' : '') + '…');
+    const uploadZone = document.getElementById('upload-zone');
+    uploadZone.classList.add('loading');
+    const BATCH = 5;
+    let processed = 0;
+    for (let i = 0; i < imageFiles.length; i += BATCH) {
+        const batch = imageFiles.slice(i, i + BATCH);
+        const results = await Promise.allSettled(batch.map(f => processOneFile(f)));
+        for (const r of results) {
+            if (r.status === 'fulfilled' && r.value) { state.images.push(r.value); processed++; }
+        }
+        renderImages();
+        setStatus('Chargement… ' + processed + '/' + imageFiles.length);
+    }
+    state.isLoadingImages = false;
+    uploadZone.classList.remove('loading');
+    setStatus(null);
+    updateGenerateBtn();
+    updateOrderControls();
+}
+
+function removeImage(id) {
+    state.images = state.images.filter(img => img.id !== id);
+    renderImages();
+    updateOrderControls();
+    updateGenerateBtn();
+}
+
+function renderImages() {
+    const grid = document.getElementById('images-grid');
+    grid.innerHTML = state.images.map((img, i) =>
+        '<div class="image-card">' +
+        '<img src="' + (img.thumbnail || img.dataUri) + '" alt="" loading="lazy">' +
+        '<div class="order-badge">' + (i + 1) + '</div>' +
+        '<button class="remove-btn" data-remove="' + img.id + '">✕</button>' +
+        '</div>'
+    ).join('');
+    grid.querySelectorAll('[data-remove]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            removeImage(parseFloat(btn.dataset.remove));
+        });
+    });
+}
+
+function updateOrderControls() {
+    const el = document.getElementById('order-controls');
+    if (!el) return;
+    el.style.display = state.images.length > 1 ? 'flex' : 'none';
+}
+
+// ══════════════════════════════════════════════════════════════════
+// RENDU CATÉGORIES
+// ══════════════════════════════════════════════════════════════════
+function renderCategories() {
+    const container = document.getElementById('categories-grid');
+    container.innerHTML = CATEGORIES.map(c =>
+        '<div class="category-card ' + (state.category === c.id ? 'selected' : '') + '" data-category="' + c.id + '">' +
+        '<div class="cat-emoji">' + c.emoji + '</div>' +
+        '<div class="cat-name">' + esc(c.name) + '</div>' +
+        '</div>'
+    ).join('');
+
+    container.querySelectorAll('.category-card').forEach(el => {
+        el.addEventListener('click', () => {
+            state.category = el.dataset.category;
+            const cat = CATEGORIES.find(c => c.id === state.category);
+            renderCategories();
+            renderCategoryBanner();
+            if (cat && cat.defaultFraming) {
+                const framingSel = document.getElementById('framing-select');
+                if (framingSel) {
+                    framingSel.value = cat.defaultFraming;
+                    state.framing = cat.defaultFraming;
+                }
+            }
+            showToast(cat ? cat.name + ' sélectionné' : 'Catégorie', 'success', 1200);
+        });
+    });
+}
+
+function renderCategoryBanner() {
+    const banner = document.getElementById('category-banner');
+    const cat = CATEGORIES.find(c => c.id === state.category);
+    if (!banner) return;
+    if (!cat) { banner.style.display = 'none'; return; }
+    banner.style.display = 'block';
+    banner.innerHTML = '<strong>' + cat.emoji + ' ' + esc(cat.name) + '</strong> — L\'IA va mettre en valeur le tissu, la coupe et les détails de ce type de pièce. Cadrage par défaut : <strong>' + cat.defaultFraming + '</strong>.';
+}
+
+// ══════════════════════════════════════════════════════════════════
+// RENDU PRESETS
+// ══════════════════════════════════════════════════════════════════
+function renderPromptPresets() {
+    const container = document.getElementById('prompt-presets');
+    container.innerHTML = PROMPT_PRESETS.map((p, i) =>
+        '<div class="prompt-preset" data-preset="' + i + '">' + esc(p.label) + '</div>'
+    ).join('');
+    container.querySelectorAll('.prompt-preset').forEach(el => {
+        el.addEventListener('click', () => {
+            const idx = parseInt(el.dataset.preset, 10);
+            const preset = PROMPT_PRESETS[idx];
+            if (!preset) return;
+            const ta = document.getElementById('main-prompt');
+            ta.value = preset.text;
+            state.mainPrompt = preset.text;
+            ta.focus();
+            showToast('Exemple appliqué', 'success', 1200);
+        });
+    });
+}
+
+function renderStyles() {
+    const container = document.getElementById('styles-grid');
+    let html = '';
+
+    html += '<div class="no-style-card ' + (state.selectedEffect === null ? 'selected' : '') + '" data-effect="none">' +
+        (state.selectedEffect === null
+            ? '✓ Aucune collection — votre prompt seul gère le catalogue'
+            : '🚫 Aucune collection (prompt seul)') +
+        '</div>';
+
+    html += '<div class="style-category-header">🎬 Types de collection</div>';
+    html += '<div class="style-category-desc">Chaque collection définit l\'ambiance, les transitions et le rythme du catalogue.</div>';
+
+    html += COLLECTION_THEMES.map(s =>
+        '<div class="style-card ' + (state.selectedEffect === s.id ? 'selected' : '') + '" data-effect="' + s.id + '">' +
+        '<div class="style-emoji">' + s.emoji + '</div>' +
+        '<div>' +
+        '<div class="style-name">' + esc(s.name) + '</div>' +
+        '<div class="style-desc">' + esc(s.desc) + '</div>' +
+        '</div>' +
+        '</div>'
+    ).join('');
+
+    container.innerHTML = html;
+    container.querySelectorAll('[data-effect]').forEach(el => {
+        el.addEventListener('click', () => {
+            const val = el.dataset.effect;
+            state.selectedEffect = (val === 'none') ? null : val;
+            renderStyles();
+        });
+    });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// CONSTRUCTION DU PROMPT
+// ══════════════════════════════════════════════════════════════════
+function buildPrompt(sceneIndex, totalScenes) {
+    const cat = CATEGORIES.find(c => c.id === state.category);
+    const theme = state.selectedEffect ? COLLECTION_THEMES.find(s => s.id === state.selectedEffect) : null;
+    const hasUserPrompt = state.mainPrompt && state.mainPrompt.trim().length > 0;
+    const parts = [];
+    const rigid = !!cat && RIGID_CATEGORIES.includes(cat.id);
+
+    parts.push(
+        'Animate this exact product image as scene ' + (sceneIndex + 1) + ' of ' + totalScenes + ' in a fashion catalog video. ' +
+        'The garment must remain IDENTICAL to the input image: exact same color, same cut, same fabric, same pattern, same logo, same details. ' +
+        'This is a CONTINUATION of the source image, not a re-imagination. ' +
+        'Preserve the exact composition, framing, and layout of the original image. ' +
+        'The camera does NOT change the garment. Only subtle motion, fabric movement, breathing of the model, light, and atmosphere are animated. ' +
+        'Sound design: soft ambient textures, gentle room tone, NO music, NO dialogue.'
+    );
+
+    if (cat) {
+        parts.push('PRODUCT CATEGORY: ' + cat.name.toUpperCase() + ' — ' + cat.prompt);
+    }
+    if (state.productDesc && state.productDesc.trim()) {
+        parts.push('PRODUCT DESCRIPTION (reproduce exactly, never redesign): ' + state.productDesc.trim());
+    }
+    if (rigid) {
+        parts.push('STRICT FIDELITY: this is a rigid product. Do NOT add, remove or change any part (laces, studs, buckles, logos, sole, panels, stitching). Same shape, same colors, same materials in every frame. The product itself does not deform');
+    }
+
+    if (theme) parts.push(theme.prompt);
+
+    if (hasUserPrompt) {
+        parts.push('Artistic direction (highest priority, must not change the garment or composition): ' + state.mainPrompt.trim());
+    }
+
+    if (!rigid && state.transition && TRANSITION_PROMPTS[state.transition]) {
+        parts.push('Transition to the next scene: ' + TRANSITION_PROMPTS[state.transition]);
+    }
+
+    if (rigid) {
+        parts.push('Keep exactly the framing, angle and scale of the source image. No zoom, no crop, no change of viewpoint');
+    } else if (state.framing !== 'random' && FRAMING_PRESETS[state.framing]) {
+        parts.push(FRAMING_PRESETS[state.framing]);
+    } else if (cat && cat.defaultFraming && FRAMING_PRESETS[cat.defaultFraming]) {
+        parts.push(FRAMING_PRESETS[cat.defaultFraming]);
+    }
+
+    if (state.intensity !== 'random' && INTENSITY_PRESETS[state.intensity]) {
+        parts.push(INTENSITY_PRESETS[state.intensity]);
+    } else {
+        parts.push(INTENSITY_PRESETS.moderate);
+    }
+
+    if (rigid) {
+        parts.push('only the light and soft reflections move across the product, the surroundings stay calm');
+        parts.push('static locked-off camera, no orbit, no rack focus, no push-in');
+        parts.push('soft even studio light, professional product photography');
+    } else {
+        parts.push(randomItem(RANDOM_ACTIONS));
+        parts.push(randomItem(RANDOM_CAMERA));
+        parts.push(randomItem(RANDOM_LIGHTING));
+    }
+    parts.push('Portrait orientation 9:16 vertical, 24fps, no text, no subtitles, no watermarks, consistent garment color and cut throughout the animation');
+
+    return parts.join('. ');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// API
+// ══════════════════════════════════════════════════════════════════
+async function apiFetch(url, options = {}, label = 'API') {
+    for (let attempt = 0; attempt < 7; attempt++) {
+        if (state.stopRequested) throw new Error('Arrêt demandé');
+        try {
+            const res = await fetch(url, options);
+            if (res.status === 429) {
+                state.creationAttemptsSinceLastError = 0;
+                if (createIntervalMs < CREATE_INTERVAL_SAFE) {
+                    createIntervalMs = Math.min(createIntervalMs + 8000, CREATE_INTERVAL_MAX);
+                }
+                const wait = [15, 30, 45, 60, 90, 120, 180][Math.min(attempt, 6)];
+                setStatus('Le catalogue se prépare… (' + wait + 's)');
+                await sleep(wait * 1000);
+                continue;
+            }
+            if (res.status === 503) {
+                const wait = [5, 10, 15, 20, 30, 45][Math.min(attempt, 5)];
+                setStatus('La scène se prépare… (' + wait + 's)');
+                await sleep(wait * 1000);
+                continue;
+            }
+            if (res.ok && createIntervalMs > CREATE_INTERVAL_MIN) {
+                state.creationAttemptsSinceLastError++;
+                if (state.creationAttemptsSinceLastError >= 3) {
+                    createIntervalMs = Math.max(createIntervalMs - 4000, CREATE_INTERVAL_MIN);
+                    state.creationAttemptsSinceLastError = 0;
+                }
+            }
+            return res;
+        } catch (e) {
+            if (e.message === 'Arrêt demandé') throw e;
+            const wait = [3, 5, 8, 12, 20, 30][Math.min(attempt, 5)];
+            setStatus('Connexion… (' + wait + 's)');
+            await sleep(wait * 1000);
+        }
+    }
+    return fetch(url, options);
+}
+
+async function createVideoTask(imageDataUri, prompt) {
+    const body = {
+        model: MODEL_VIDEO,
+        prompt: prompt,
+        image: imageDataUri,
+        num_frames: state.durationFrames,
+        frame_rate: FRAME_RATE,
+        num_inference_steps: state.inferenceSteps
+    };
+    const res = await apiFetch(API_BASE + '/videos', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + getApiKey(), 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    }, 'Création');
+    const rawText = await res.text();
+    logError('Info', 'Création — HTTP ' + res.status + ' — réponse : ' + rawText.slice(0, 500));
+    if (!res.ok) {
+        throw new Error('HTTP ' + res.status + ' — ' + rawText.slice(0, 200));
+    }
+    let data;
+    try { data = JSON.parse(rawText); }
+    catch (e) { throw new Error('Réponse non-JSON à la création : ' + rawText.slice(0, 200)); }
+    const videoId = data.video_id || data.id || data.task_id;
+    if (!videoId) throw new Error('Pas de video_id retourné — champs reçus : ' + Object.keys(data).join(', '));
+    return videoId;
+}
+
+async function pollVideo(videoId, onProgress) {
+    const estimatedMs = estimateGenerationTime(state.durationFrames);
+    const estimatedSec = estimatedMs / 1000;
+    let remaining = Math.max(20, Math.floor(estimatedSec * 0.8));
+    while (remaining > 0) {
+        if (state.stopRequested) throw new Error('Arrêt demandé');
+        onProgress('La pièce se prépare… — ' + remaining + 's');
+        await sleep(1000);
+        remaining--;
+    }
+    for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt++) {
+        if (state.stopRequested) throw new Error('Arrêt demandé');
+        if (attempt > 0) {
+            let r = POLL_INTERVAL_SEC;
+            while (r > 0) {
+                if (state.stopRequested) throw new Error('Arrêt demandé');
+                onProgress('Le vêtement prend vie… — ' + r + 's');
+                await sleep(1000);
+                r--;
+            }
+        }
+        const url = POLL_BASE + '?video_id=' + encodeURIComponent(videoId) + '&model_name=' + encodeURIComponent(MODEL_VIDEO);
+        const res = await apiFetch(url, {
+            method: 'GET',
+            headers: { 'Authorization': 'Bearer ' + getApiKey() }
+        }, 'Polling');
+        const rawText = await res.text();
+        logError('Info', 'Polling #' + (attempt + 1) + ' — HTTP ' + res.status + ' — réponse : ' + rawText.slice(0, 800));
+        let d;
+        try { d = JSON.parse(rawText); }
+        catch (e) {
+            logError('Polling', 'Réponse non-JSON : ' + rawText.slice(0, 300));
+            continue;
+        }
+        const status = d.status || 'unknown';
+        const progress = d.progress || 0;
+        onProgress('Création… — ' + progress + '%');
+        if (status === 'completed' || status === 'succeeded' || status === 'done') {
+            const videoUrl = (d.metadata && d.metadata.url) || d.url || (d.output && d.output.url);
+            if (!videoUrl) throw new Error('Terminé mais pas d\'URL — champs reçus : ' + Object.keys(d).join(', ') + (d.metadata ? ' / metadata: ' + Object.keys(d.metadata).join(', ') : ''));
+            return videoUrl;
+        }
+        if (status === 'failed' || status === 'error' || status === 'cancelled') {
+            throw new Error('Échec (' + status + ') — réponse complète : ' + rawText.slice(0, 300));
+        }
+    }
+    throw new Error('Délai maximal dépassé');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// QUEUE
+// ══════════════════════════════════════════════════════════════════
+function renderQueue() {
+    const queueEl = document.getElementById('queue');
+    if (!state.queue.length) { queueEl.style.display = 'none'; return; }
+    queueEl.style.display = 'block';
+    const total = state.queue.length;
+    const done = state.completed + state.failed;
+    const inProgress = state.queue.filter(q => q.status === 'processing').length;
+    const pending = total - done - inProgress;
+    const estGen = estimateGenerationTime(state.durationFrames) / 1000;
+    const eta = pending > 0
+        ? (pending * (createIntervalMs / 1000)) + estGen
+        : (inProgress * estGen / Math.max(inProgress, 1));
+    let html = '<div class="queue-summary">' +
+        '<span class="progress-text">Progression : ' + done + '/' + total + '</span>' +
+        '<span class="eta-text">' + (done < total ? '≈ ' + formatEta(eta) + ' restant' : 'Terminé') + '</span>' +
+        '</div>';
+    const visible = state.queue.slice(0, MAX_VISIBLE_QUEUE);
+    const hidden = state.queue.length - visible.length;
+    html += visible.map(item => {
+        let icon = '○', statusText = 'En file', cls = 'pending';
+        if (item.status === 'creating') { icon = '◐'; statusText = 'Préparation…'; cls = 'creating'; }
+        else if (item.status === 'processing') { icon = '◐'; statusText = item.progress || 'En cours…'; cls = 'processing'; }
+        else if (item.status === 'done') { icon = '●'; statusText = 'Terminé'; cls = 'done'; }
+        else if (item.status === 'failed') { icon = '✕'; statusText = item.progress === 'Arrêté' ? 'Arrêté' : 'Échec'; cls = 'failed'; }
+        return '<div class="queue-item ' + cls + '">' +
+            '<div class="q-icon">' + icon + '</div>' +
+            '<div class="q-name">Pièce ' + (item.imageIndex + 1) + '</div>' +
+            '<div class="q-status">' + esc(statusText) + '</div>' +
+            '</div>';
+    }).join('');
+    if (hidden > 0) {
+        html += '<div class="queue-more">… et ' + hidden + ' autre' + (hidden > 1 ? 's' : '') + '</div>';
+    }
+    queueEl.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// GALERIE
+// ══════════════════════════════════════════════════════════════════
+async function downloadVideo(videoUrl, label, linkEl) {
+    const original = linkEl.textContent;
+    linkEl.textContent = '⏳ Téléchargement…';
+    try {
+        const res = await fetch(videoUrl);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = label.replace(/\s+/g, '_') + '.mp4';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+    } catch (e) {
+        // Repli (CORS, etc.) : ouvrir la vidéo dans un nouvel onglet
+        logError('Téléchargement', e);
+        window.open(videoUrl, '_blank', 'noopener');
+    }
+    linkEl.textContent = original;
+}
+
+function addToGallery(videoUrl, label) {
+    const galleryEl = document.getElementById('gallery');
+    const galleryGrid = document.getElementById('gallery-grid');
+    galleryEl.style.display = 'block';
+    const el = document.createElement('div');
+    el.className = 'gallery-item';
+    el.innerHTML = '<video controls preload="metadata" muted playsinline>' +
+        '<source src="' + esc(videoUrl) + '" type="video/mp4">' +
+        '</video>' +
+        '<div class="g-caption">' + esc(label) + '</div>' +
+        '<a class="g-download" href="' + esc(videoUrl) + '" target="_blank" rel="noopener">⬇️ Télécharger</a>';
+    const link = el.querySelector('.g-download');
+    link.addEventListener('click', (e) => {
+        e.preventDefault();
+        downloadVideo(videoUrl, label, link);
+    });
+    galleryGrid.appendChild(el);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// PIPELINE
+// ══════════════════════════════════════════════════════════════════
+async function createTaskOnly(item) {
+    item.status = 'creating';
+    item.progress = 'Préparation…';
+    renderQueue();
+    const prompt = buildPrompt(item.imageIndex, state.queue.length);
+    item.prompt = prompt;
+    log('[Pièce ' + (item.imageIndex + 1) + '] Création…');
+    const videoId = await createVideoTask(item.image.dataUri, prompt);
+    item.videoId = videoId;
+    item.startTime = Date.now();
+    item.status = 'processing';
+    item.progress = 'En cours…';
+    renderQueue();
+    log('[Pièce ' + (item.imageIndex + 1) + '] Tâche : ' + String(videoId).slice(0, 30) + '…');
+    return videoId;
+}
+
+async function pollTaskAndDisplay(item) {
+    try {
+        const videoUrl = await pollVideo(item.videoId, (prog) => {
+            item.progress = prog;
+            renderQueue();
+        });
+        const elapsed = Date.now() - item.startTime;
+        recordGenerationTime(state.durationFrames, elapsed);
+        log('[Pièce ' + (item.imageIndex + 1) + '] Terminée en ' + (elapsed / 1000).toFixed(1) + 's');
+        item.status = 'done';
+        item.videoUrl = videoUrl;
+        item.progress = 'Terminé';
+        state.completed++;
+        renderQueue();
+        updateGenerateBtn();
+        addToGallery(videoUrl, 'Pièce ' + (item.imageIndex + 1));
+    } catch (e) {
+        if (e.message === 'Arrêt demandé') {
+            item.status = 'failed';
+            item.progress = 'Arrêté';
+        } else {
+            log('[Pièce ' + (item.imageIndex + 1) + '] Échec : ' + e.message);
+            logError('Pièce ' + (item.imageIndex + 1), e.message);
+            item.status = 'failed';
+            item.progress = 'Échec';
+            state.failed++;
+        }
+        renderQueue();
+        updateGenerateBtn();
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// WORKFLOW
+// ══════════════════════════════════════════════════════════════════
+async function startGeneration() {
+    if (state.isRunning || !state.images.length) return;
+    if (!getApiKey()) {
+        showToast('Ajoutez d\'abord votre clé API', 'error');
+        document.getElementById('api-key-input').focus();
+        return;
+    }
+    state.mainPrompt = document.getElementById('main-prompt').value.trim();
+    if (!state.mainPrompt && !state.selectedEffect) {
+        if (!confirm('Ni prompt ni collection sélectionnée. Continuer avec la collection par défaut ?')) return;
+    }
+    state.isRunning = true;
+    state.stopRequested = false;
+    state.completed = 0;
+    state.failed = 0;
+    state.creationAttemptsSinceLastError = 0;
+    createIntervalMs = CREATE_INTERVAL_MIN;
+    state.queue = state.images.map((img, i) => ({
+        imageIndex: i, image: img, status: 'pending', progress: null,
+        videoId: null, videoUrl: null, prompt: null, startTime: null
+    }));
+    document.getElementById('gallery-grid').innerHTML = '';
+    document.getElementById('gallery').style.display = 'none';
+    document.getElementById('stop-btn').classList.add('visible');
+    document.getElementById('generate-btn').disabled = true;
+    await ensureWakeLockActive();
+    renderQueue();
+    updateGenerateBtn();
+    const cat = CATEGORIES.find(c => c.id === state.category);
+    log('Démarrage — ' + state.images.length + ' pièces');
+    log('Catégorie : ' + (cat ? cat.name : 'aucune'));
+    log('Collection : ' + (state.selectedEffect || 'aucune'));
+    log('Transition : ' + state.transition);
+    const totalStart = Date.now();
+    const pollingTasks = [];
+    try {
+        for (let i = 0; i < state.queue.length; i++) {
+            if (state.stopRequested) break;
+            const item = state.queue[i];
+            try {
+                await createTaskOnly(item);
+                pollingTasks.push(pollTaskAndDisplay(item));
+            } catch (e) {
+                if (e.message === 'Arrêt demandé') break;
+                log('[Pièce ' + (i + 1) + '] Échec : ' + e.message);
+                logError('Pièce ' + (i + 1), e.message);
+                item.status = 'failed';
+                item.progress = 'Échec';
+                state.failed++;
+                renderQueue();
+                updateGenerateBtn();
+            }
+            if (i < state.queue.length - 1 && !state.stopRequested) {
+                const waitSec = Math.ceil(createIntervalMs / 1000);
+                for (let r = waitSec; r > 0; r--) {
+                    if (state.stopRequested) break;
+                    setStatus('Respiration créative… — Pièce ' + (i + 2) + '/' + state.queue.length + ' dans ' + r + 's');
+                    await sleep(1000);
+                }
+            }
+        }
+        if (pollingTasks.length > 0) {
+            setStatus('Finalisation…');
+            await Promise.allSettled(pollingTasks);
+        }
+    } catch (e) { log('Erreur globale : ' + e.message); }
+    const totalElapsed = (Date.now() - totalStart) / 1000;
+    const summary = state.stopRequested
+        ? 'Arrêté — ' + state.completed + '/' + state.queue.length + ' pièces'
+        : '✦ ' + state.completed + '/' + state.queue.length + ' pièces créées en ' + formatEta(totalElapsed) + ' ✦';
+    log(summary);
+    setStatus(summary);
+    await sleep(4000);
+    setStatus(null);
+    state.isRunning = false;
+    state.stopRequested = false;
+    document.getElementById('stop-btn').classList.remove('visible');
+    updateGenerateBtn();
+    showToast(state.completed + ' pièce' + (state.completed > 1 ? 's' : '') + ' créée' + (state.completed > 1 ? 's' : ''), 'success');
+}
+
+function stopGeneration() {
+    if (!state.isRunning) return;
+    state.stopRequested = true;
+    log('Arrêt demandé');
+    setStatus('Arrêt en cours…');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════
+(function init() {
+    const saveBtn = document.getElementById('api-save-btn');
+    if (saveBtn) saveBtn.addEventListener('click', saveApiKey);
+    const stopBtn = document.getElementById('stop-btn');
+    if (stopBtn) stopBtn.addEventListener('click', stopGeneration);
+    const apiInput = document.getElementById('api-key-input');
+    if (apiInput) {
+        apiInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); saveApiKey(); }
+        });
+    }
+    document.querySelectorAll('[data-toggle]').forEach(header => {
+        header.addEventListener('click', () => {
+            document.getElementById(header.dataset.toggle).classList.toggle('open');
+        });
+    });
+    const uploadZone = document.getElementById('upload-zone');
+    const fileInput = document.getElementById('file-input');
+    if (uploadZone && fileInput) {
+        uploadZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', e => {
+            handleFiles(e.target.files);
+            fileInput.value = '';
+        });
+    }
+    const shuffleBtn = document.getElementById('shuffle-btn');
+    if (shuffleBtn) {
+        shuffleBtn.addEventListener('click', () => {
+            for (let i = state.images.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [state.images[i], state.images[j]] = [state.images[j], state.images[i]];
+            }
+            renderImages();
+            showToast('Images mélangées', 'success', 1500);
+        });
+    }
+    const reverseBtn = document.getElementById('reverse-btn');
+    if (reverseBtn) {
+        reverseBtn.addEventListener('click', () => {
+            state.images.reverse();
+            renderImages();
+            showToast('Ordre inversé', 'success', 1500);
+        });
+    }
+    const sortNameBtn = document.getElementById('sort-name-btn');
+    if (sortNameBtn) {
+        sortNameBtn.addEventListener('click', () => {
+            state.images.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            renderImages();
+            showToast('Trié par nom', 'success', 1500);
+        });
+    }
+    const mainPrompt = document.getElementById('main-prompt');
+    if (mainPrompt) {
+        mainPrompt.addEventListener('input', e => { state.mainPrompt = e.target.value; });
+    }
+    const durationSelect = document.getElementById('duration-select');
+    if (durationSelect) {
+        durationSelect.addEventListener('change', e => { state.durationFrames = parseInt(e.target.value, 10); });
+    }
+    const framingSelect = document.getElementById('framing-select');
+    if (framingSelect) {
+        framingSelect.addEventListener('change', e => { state.framing = e.target.value; });
+    }
+    const intensitySelect = document.getElementById('intensity-select');
+    if (intensitySelect) {
+        intensitySelect.addEventListener('change', e => { state.intensity = e.target.value; });
+    }
+    const transitionSelect = document.getElementById('transition-select');
+    if (transitionSelect) {
+        transitionSelect.addEventListener('change', e => { state.transition = e.target.value; });
+    }
+    const productDesc = document.getElementById('product-desc');
+    if (productDesc) {
+        productDesc.addEventListener('input', e => { state.productDesc = e.target.value; });
+    }
+    const stepsSelect = document.getElementById('steps-select');
+    if (stepsSelect) {
+        stepsSelect.addEventListener('change', e => { state.inferenceSteps = parseInt(e.target.value, 10); });
+    }
+    const generateBtn = document.getElementById('generate-btn');
+    if (generateBtn) generateBtn.addEventListener('click', startGeneration);
+    const wakeBtn = document.getElementById('wake-toggle-btn');
+    if (wakeBtn) wakeBtn.addEventListener('click', toggleWakeLock);
+    try {
+        const saved = localStorage.getItem(WAKE_LOCK_PREF);
+        wakeLockEnabled = saved === '1';
+    } catch (e) {}
+    if (wakeLockEnabled) {
+        activateWakeLock().then(() => updateWakeStatus());
+    }
+    updateApiPanel();
+    updateTimingDisplay();
+    updateWakeStatus();
+    renderPromptPresets();
+    renderCategories();
+    renderCategoryBanner();
+    renderStyles();
+    renderImages();
+    renderQueue();
+    updateOrderControls();
+    log('Prêt.');
+})();
+</script>
+
+</body>
+</html>
