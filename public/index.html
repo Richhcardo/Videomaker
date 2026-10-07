@@ -3239,6 +3239,71 @@ fetch('/api/narration/status').then(r => r.json()).then(d => {
 refresh();
 })();
 </script>
+<script>
+(function () {
+'use strict';
+const voiceInput = document.getElementById('nar-voice');
+const voiceBtn = document.getElementById('nar-voice-btn');
+const result = document.getElementById('nar-audio-result');
+const textEl = document.getElementById('nar-text');
+const VOICE_KEY = 'elevenlabs_voice_id';
+let lastUrl = null;
+
+try { voiceInput.value = localStorage.getItem(VOICE_KEY) || ''; } catch (e) {}
+voiceInput.addEventListener('input', () => {
+    try { localStorage.setItem(VOICE_KEY, voiceInput.value.trim()); } catch (e) {}
+});
+
+function seconds() {
+    const secEl = document.getElementById('nar-seconds');
+    const custom = secEl ? parseFloat(String(secEl.value).replace(',', '.')) : NaN;
+    if (Number.isFinite(custom) && custom > 0) return custom;
+    if (state.mode === 'subject') return state.sj.seconds;
+    return Math.min(12, Math.max(4, Math.round(state.durationFrames / FRAME_RATE)));
+}
+
+async function generate() {
+    const text = textEl.value.trim();
+    const voice = voiceInput.value.trim();
+    if (!text) { showToast("Écris d'abord un texte", 'warn'); return; }
+    if (!voice) { showToast("Colle l'ID de la voix", 'warn'); return; }
+    voiceBtn.disabled = true;
+    const label = voiceBtn.textContent;
+    voiceBtn.textContent = 'Génération…';
+    try {
+        const r = await fetch('/api/narration/audio', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: text, seconds: seconds(), voice_id: voice, auto_fit: true })
+        });
+        if (!r.ok) {
+            let d = {};
+            try { d = await r.json(); } catch (e) {}
+            if (d.error === 'too_long') {
+                throw new Error('Voix trop longue (' + d.audio_seconds + ' s pour ' + d.video_seconds + ' s). Raccourcis le texte.');
+            }
+            throw new Error(d.error || ('HTTP ' + r.status));
+        }
+        const finalText = decodeURIComponent(r.headers.get('X-Narration-Text') || '');
+        if (finalText) textEl.value = finalText;
+        const blob = await r.blob();
+        if (lastUrl) URL.revokeObjectURL(lastUrl);
+        lastUrl = URL.createObjectURL(blob);
+        result.innerHTML = '<audio controls src="' + lastUrl + '" style="width:100%;"></audio>' +
+            '<a class="g-download" href="' + lastUrl + '" download="narration.mp3" style="margin-top:0.5rem;border-radius:8px;">⬇️ Télécharger le MP3</a>';
+        showToast('Voix générée', 'success');
+    } catch (e) {
+        logError('Voix', e.message);
+        showToast('Échec : ' + e.message, 'error', 4000);
+    }
+    voiceBtn.disabled = false;
+    voiceBtn.textContent = label;
+}
+
+voiceBtn.addEventListener('click', generate);
+})();
+</script>
+
 
 </body>
 </html>
