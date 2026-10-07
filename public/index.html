@@ -768,64 +768,21 @@
     </div>
 </div>
 
-<script>
-(function () {
-'use strict';
-const ta = document.getElementById('nar-text');
-const btn = document.getElementById('nar-fit-btn');
-const info = document.getElementById('nar-count');
-let wps = 2.5;
-const LEAD = 0.3, TAIL = 0.5;
+<style>body[data-mode="image"] #section-narration { display: none !important; }</style>
+<div class="section open" id="section-narration">
+    <div class="section-header" data-toggle="section-narration">
+        <span class="section-title">🎙️ Texte de narration <span class="badge soft">optionnel</span></span>
+        <span class="chevron">▼</span>
+    </div>
+    <div class="section-body">
+        <div class="section-content">
+            <textarea id="nar-text" placeholder="Colle ton texte de narration ici…"></textarea>
+            <div class="field-hint" id="nar-count"></div>
+            <button type="button" class="order-btn" id="nar-fit-btn" style="margin-top:0.6rem;width:100%;">✂️ Adapter à la durée</button>
+        </div>
+    </div>
+</div>
 
-function videoSeconds() {
-    if (state.mode === 'subject') return state.sj.seconds;
-    return Math.min(12, Math.max(4, Math.round(state.durationFrames / FRAME_RATE)));
-}
-function countWords(t) { return (t.match(/[\\p{L}\\p{N}_'’\\-]+/gu) || []).length; }
-function targetWords(s) { return Math.max(3, Math.round(Math.max(1, s - LEAD - TAIL) * wps)); }
-
-function refresh() {
-    const s = videoSeconds();
-    info.textContent = countWords(ta.value) + ' mots · cible ≈ ' + targetWords(s) + ' mots pour ' + s + ' s';
-}
-
-async function fit() {
-    const text = ta.value.trim();
-    if (!text) { showToast("Écris d'abord un texte", 'warn'); return; }
-    btn.disabled = true;
-    const label = btn.textContent;
-    btn.textContent = 'Adaptation…';
-    try {
-        const r = await fetch('/api/narration/fit', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: text, seconds: videoSeconds() })
-        });
-        let d = {};
-        try { d = await r.json(); } catch (e) {}
-        if (!r.ok) throw new Error(d.error || ('HTTP ' + r.status));
-        ta.value = d.text;
-        showToast(d.rewritten ? 'Texte réécrit (' + d.words + ' mots)' : 'Déjà à la bonne durée', 'success');
-    } catch (e) {
-        logError('Narration', e.message);
-        showToast('Échec : ' + e.message, 'error', 4000);
-    }
-    btn.disabled = false;
-    btn.textContent = label;
-    refresh();
-}
-
-btn.addEventListener('click', fit);
-['input', 'change', 'click'].forEach(ev =>
-    document.addEventListener(ev, () => setTimeout(refresh, 0)));
-
-fetch('/api/narration/status').then(r => r.json()).then(d => {
-    if (d && d.wps) { wps = d.wps; refresh(); }
-}).catch(() => {});
-
-refresh();
-})();
-</script>
 
 <button type="button" class="btn-primary" id="generate-btn" disabled>
     Créer le diaporama
@@ -3228,7 +3185,7 @@ function videoSeconds() {
     if (state.mode === 'subject') return state.sj.seconds;
     return Math.min(12, Math.max(4, Math.round(state.durationFrames / FRAME_RATE)));
 }
-function countWords(t) { return (t.match(/[\\p{L}\\p{N}_'’\\-]+/gu) || []).length; }
+function countWords(t) { return (t.match(/[\p{L}\p{N}_'’\-]+/gu) || []).length; }
 function targetWords(s) { return Math.max(3, Math.round(Math.max(1, s - LEAD - TAIL) * wps)); }
 
 function refresh() {
