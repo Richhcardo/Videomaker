@@ -5,7 +5,9 @@ from flask import Flask, request, jsonify, Response, stream_with_context
 import requests
 
 app = Flask(__name__)
-import bp as narration_bp\napp.register_blueprint(narration_bp)\n')
+
+from narration import bp as narration_bp
+app.register_blueprint(narration_bp)
 
 
 def safe_filename(name):
