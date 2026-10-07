@@ -791,7 +791,7 @@ function refresh() {
 
 async function fit() {
     const text = ta.value.trim();
-    if (!text) { showToast('Écris d\\'abord un texte', 'warn'); return; }
+    if (!text) { showToast("Écris d'abord un texte", 'warn'); return; }
     btn.disabled = true;
     const label = btn.textContent;
     btn.textContent = 'Adaptation…';
@@ -2284,7 +2284,7 @@ async function pollTaskAndDisplay(item) {
 async function startGeneration() {
     if (state.isRunning || !state.images.length) return;
     if (!getApiKey()) {
-        showToast('Ajoutez d\'abord votre clé API', 'error');
+        showToast("Ajoutez d'abord votre clé API", 'error');
         document.getElementById('api-key-input').focus();
         return;
     }
@@ -2847,7 +2847,7 @@ async function imageTask(item) {
 async function startImageGeneration() {
     if (state.isRunning || state.isLoadingImages) return;
     if (!getApiKey()) {
-        showToast('Ajoutez d\'abord votre clé API', 'error');
+        showToast("Ajoutez d'abord votre clé API", 'error');
         const k = document.getElementById('api-key-input');
         if (k) k.focus();
         return;
@@ -3238,7 +3238,7 @@ function refresh() {
 
 async function fit() {
     const text = ta.value.trim();
-    if (!text) { showToast('Écris d'abord un texte', 'warn'); return; }
+    if (!text) { showToast("Écris d'abord un texte", 'warn'); return; }
     btn.disabled = true;
     const label = btn.textContent;
     btn.textContent = 'Adaptation…';
