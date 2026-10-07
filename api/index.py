@@ -6,8 +6,19 @@ import requests
 
 app = Flask(__name__)
 
-from narration import bp as narration_bp
-app.register_blueprint(narration_bp)
+try:
+    from narration import bp as narration_bp
+    app.register_blueprint(narration_bp)
+except Exception:
+    import traceback
+    _NARRATION_ERROR = traceback.format_exc()
+
+    @app.route("/api/narration/status")
+    def narration_error():
+        return _NARRATION_ERROR, 500, {"Content-Type": "text/plain"}
+
+#from narration import bp as narration_bp
+#app.register_blueprint(narration_bp)
 
 
 def safe_filename(name):
