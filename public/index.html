@@ -3183,9 +3183,12 @@ let wps = 2.5;
 const LEAD = 0.3, TAIL = 0.5;
 
 function videoSeconds() {
+    const custom = parseFloat(String(document.getElementById('nar-seconds').value).replace(',', '.'));
+    if (Number.isFinite(custom) && custom > 0) return custom;
     if (state.mode === 'subject') return state.sj.seconds;
     return Math.min(12, Math.max(4, Math.round(state.durationFrames / FRAME_RATE)));
 }
+
 function countWords(t) { return (t.match(/[\p{L}\p{N}_'’\-]+/gu) || []).length; }
 function targetWords(s) { return Math.max(3, Math.round(Math.max(1, s - LEAD - TAIL) * wps)); }
 
