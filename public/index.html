@@ -781,8 +781,8 @@
             <div class="field-hint" id="nar-count"></div>
             <button type="button" class="order-btn" id="nar-fit-btn" style="margin-top:0.6rem;width:100%;">✂️ Adapter à la durée</button>
         
-        <input type="text" class="num-input" id="nar-voice" placeholder="ID de la voix ElevenLabs" autocomplete="off" spellcheck="false" style="margin-top:0.6rem;">
-        <button type="button" class="order-btn" id="nar-voice-btn" style="margin-top:0.6rem;width:100%;">🎙️ Générer la voix (MP3)</button>
+        <input type="text" class="num-input" id="nar-voice" placeholder="Nom de la voix, Ex: kore" autocomplete="off" spellcheck="false" style="margin-top:0.6rem;">
+        <button type="button" class="order-btn" id="nar-voice-btn" style="margin-top:0.6rem;width:100%;">🎙️ Générer la voix (Wav)</button>
         <div id="nar-audio-result" style="margin-top:0.6rem;"></div>
     
         </div>
@@ -3290,7 +3290,7 @@ async function generate() {
         if (lastUrl) URL.revokeObjectURL(lastUrl);
         lastUrl = URL.createObjectURL(blob);
         result.innerHTML = '<audio controls src="' + lastUrl + '" style="width:100%;"></audio>' +
-            '<a class="g-download" href="' + lastUrl + '" download="narration.mp3" style="margin-top:0.5rem;border-radius:8px;">⬇️ Télécharger le MP3</a>';
+            '<a class="g-download" href="' + lastUrl + '" download="narration.wav" style="margin-top:0.5rem;border-radius:8px;">⬇️ Télécharger le WAV</a>';
         showToast('Voix générée', 'success');
     } catch (e) {
         logError('Voix', e.message);
